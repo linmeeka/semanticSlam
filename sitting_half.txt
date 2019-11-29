@@ -1,0 +1,23 @@
+dyna
+absolute
+compared_pose_pairs 36 pairs
+absolute_translational_error.rmse 0.375594 m
+absolute_translational_error.mean 0.351751 m
+absolute_translational_error.median 0.359321 m
+absolute_translational_error.std 0.131691 m
+absolute_translational_error.min 0.127517 m
+absolute_translational_error.max 0.577756 m
+relative:
+compared_pose_pairs 33 pairs
+translational_error.rmse 0.166749 m
+translational_error.mean 0.134761 m
+translational_error.median 0.111833 m
+translational_error.std 0.098209 m
+translational_error.min 0.000000 m
+translational_error.max 0.379338 m
+rotational_error.rmse 0.800756 deg
+rotational_error.mean 0.664514 deg
+rotational_error.median 0.009092 deg
+rotational_error.std 0.446801 deg
+rotational_error.min 0.000000 deg
+rotational_error.max 1.692438 deg

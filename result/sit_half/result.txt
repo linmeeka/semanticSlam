@@ -1,0 +1,47 @@
+dyna
+absolute
+compared_pose_pairs 36 pairs
+absolute_translational_error.rmse 0.375594 m
+absolute_translational_error.mean 0.351751 m
+absolute_translational_error.median 0.359321 m
+absolute_translational_error.std 0.131691 m
+absolute_translational_error.min 0.127517 m
+absolute_translational_error.max 0.577756 m
+rele
+compared_pose_pairs 33 pairs
+translational_error.rmse 0.166749 m
+translational_error.mean 0.134761 m
+translational_error.median 0.111833 m
+translational_error.std 0.098209 m
+translational_error.min 0.000000 m
+translational_error.max 0.379338 m
+rotational_error.rmse 0.800756 deg
+rotational_error.mean 0.664514 deg
+rotational_error.median 0.009092 deg
+rotational_error.std 0.446801 deg
+rotational_error.min 0.000000 deg
+rotational_error.max 1.692438 deg
+
+ORB SLAM2
+abso
+compared_pose_pairs 46 pairs
+absolute_translational_error.rmse 0.338658 m
+absolute_translational_error.mean 0.317562 m
+absolute_translational_error.median 0.321141 m
+absolute_translational_error.std 0.117658 m
+absolute_translational_error.min 0.059137 m
+absolute_translational_error.max 0.542253 m
+rele
+compared_pose_pairs 43 pairs
+translational_error.rmse 0.121979 m
+translational_error.mean 0.101789 m
+translational_error.median 0.101136 m
+translational_error.std 0.067214 m
+translational_error.min 0.000000 m
+translational_error.max 0.283226 m
+rotational_error.rmse 0.536911 deg
+rotational_error.mean 0.447028 deg
+rotational_error.median 0.007332 deg
+rotational_error.std 0.297388 deg
+rotational_error.min 0.000000 deg
+rotational_error.max 0.992641 deg
