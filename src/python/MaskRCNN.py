@@ -12,6 +12,10 @@ import utils
 import model as modellib
 # import visualize
 
+current_segmentation = None
+current_class_ids = None
+current_bounding_boxes = None
+
 class Mask:
     """
     """
@@ -44,6 +48,11 @@ class Mask:
 
 	# Load weights trained on MS-COCO
 	self.model.load_weights(COCO_MODEL_PATH, by_name=True)
+
+	# pre-paremeters
+	self.SCORE_T = 0
+	self.FILTER_CLASSES = ['person']
+	self.FILTER_WEIGHTS = {'person': 1} #{'person': 255}
 	self.class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
                'bus', 'train', 'truck', 'boat', 'traffic light',
                'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
@@ -74,7 +83,55 @@ class Mask:
        'keyboard':2., 'cell phone':0., 'microwave':0., 'oven':0., 'toaster':0.,
        'sink':0., 'refrigerator':0., 'book':0., 'clock':0., 'vase':0., 'scissors':0.,
        'teddy bear':0., 'hair drier':0., 'toothbrush':0.}
+
+	self.FILTER_CLASSES = [self.class_names.index(x) for x in self.FILTER_CLASSES]
+	self.FILTER_WEIGHTS = {self.class_names.index(x): self.FILTER_WEIGHTS[x] for x in self.FILTER_WEIGHTS}
     print 'Initialated Mask RCNN network...'
+    
+    def GetSegResult(self,image,image2=None):
+	h = image.shape[0]
+	w = image.shape[1]
+	if len(image.shape) == 2:
+	    im = np.zeros((h,w,3))
+	    im[:,:,0]=image
+	    im[:,:,1]=image
+	    im[:,:,2]=image
+	    image = im
+	#if image2 is not None:
+	#	args+=[image2]
+	# Run detection
+	results = self.model.detect([image], verbose=0)
+	# Visualize results
+	r = results[0]
+	masks = r['masks']
+        scores = r['scores']
+   	class_ids = r['class_ids']
+	rois = r['rois']
+	n = len(class_ids)
+	
+	id_image = np.zeros([h,w], np.uint8)
+        exported_class_ids = []
+        exported_rois = []
+	for m in range(n):
+            class_id = class_ids[m]
+            if len(self.FILTER_CLASSES) == 0 or class_id in self.FILTER_CLASSES:
+                if scores[m] >= self.SCORE_T:
+                    mask = masks[:,:,m]
+                    val = len(exported_class_ids)+1
+                    if len(self.FILTER_WEIGHTS) > 0 and class_id in self.FILTER_WEIGHTS:
+                        val = self.FILTER_WEIGHTS[class_id]
+                    id_image[mask == 1] = val
+                    #exported_class_ids.append(str(class_id))
+                    exported_class_ids.append(int(class_id))
+                    exported_rois.append(rois[m,:].tolist())
+    
+        global current_segmentation
+        global current_class_ids
+        global current_bounding_boxes
+        current_segmentation=id_image
+        current_class_ids=exported_class_ids
+        current_bounding_boxes=exported_rois
+        return id_image, exported_class_ids, exported_rois
 
     def GetDynSeg(self,image,image2=None):
 	h = image.shape[0]
@@ -158,7 +215,6 @@ class Mask:
 		'''
 		i+=1
 	#print('GetSeg mask shape:',mask.shape)
-
 	return mask
 
     

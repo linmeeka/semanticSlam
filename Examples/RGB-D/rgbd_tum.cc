@@ -147,7 +147,9 @@ int main(int argc, char **argv)
         if (argc == 6 || argc == 7)
         {
             cv::Mat maskRCNN;
-            maskRCNN = MaskNet->GetSegmentation(imRGB,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
+            std::vector<cv::Rect> ROIRes;
+            MaskNet->GetSegmentation(imRGB,maskRCNN,ROIRes,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
+            //maskRCNN = MaskNet->GetSegmentation(imRGB,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
             // cv::Mat maskRCNNdil = maskRCNN.clone();
             // cv::dilate(maskRCNN,maskRCNNdil, kernel);
             // mask = mask - maskRCNNdil;
