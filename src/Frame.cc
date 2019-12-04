@@ -317,10 +317,10 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 }
 
 // modified by kylin
-Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const cv::Mat &imRGB,
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const cv::Mat &imRGB,
              const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    :mImMask(imMask),mImMaskColor(imMaskColor), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
+    :mImMask(imMask),mImMaskColor(imMaskColor), mImROIs(imROIs), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth), mImRGB(imRGB)
 {
     // Frame ID

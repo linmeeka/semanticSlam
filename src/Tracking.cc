@@ -369,7 +369,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD,const cv
 }
 
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor,
-                                const double &timestamp, cv::Mat &imRGBOut,
+                                const std::vector<cv::Rect> &ROIs, const double &timestamp, cv::Mat &imRGBOut,
                                 cv::Mat &imDOut, cv::Mat &maskOut)
 {
     mImGray = imRGB;

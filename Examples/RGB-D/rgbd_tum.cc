@@ -144,10 +144,10 @@ int main(int argc, char **argv)
         // Segment out the images
         //cv::Mat mask = cv::Mat::ones(480,640,CV_8U);
         cv::Mat mask,maskColor;
+        std::vector<cv::Rect> ROIRes;
         if (argc == 6 || argc == 7)
         {
             cv::Mat maskRCNN;
-            std::vector<cv::Rect> ROIRes;
             MaskNet->GetSegmentation(imRGB,maskRCNN,ROIRes,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
             //maskRCNN = MaskNet->GetSegmentation(imRGB,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
             // cv::Mat maskRCNNdil = maskRCNN.clone();
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         //if (argc == 7){SLAM.TrackRGBD(imRGB,imD,mask,tframe,imRGBOut,imDOut,maskOut);}
         if (argc == 7){
            
-            SLAM.TrackRGBD(imRGB,imD,mask,maskColor,tframe,imRGBOut,imDOut,maskOut);
+            SLAM.TrackRGBD(imRGB,imD,mask,maskColor,ROIRes,tframe,imRGBOut,imDOut,maskOut);
             }
         else {SLAM.TrackRGBD(imRGB,imD,mask,tframe);}
 
