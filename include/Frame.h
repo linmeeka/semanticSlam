@@ -18,6 +18,7 @@
 #include "ORBVocabulary.h"
 #include "KeyFrame.h"
 #include "ORBextractor.h"
+//#include "SegData.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -28,6 +29,7 @@ namespace ORB_SLAM2
 
 class MapPoint;
 class KeyFrame;
+//class SegData;
 
 class Frame
 {
@@ -47,7 +49,7 @@ public:
     Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
     
     // Constructor for RGB-D cameras.
-    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const std::vector<int> &imClassIds,const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
 
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const cv::Mat &mask, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
@@ -101,6 +103,8 @@ public:
     void ExtractORBKeyPoints(int flag,const cv::Mat &im);
     void ExtractORBDesp(int flag,const cv::Mat &im);
 
+    void InitSegData(std::vector<cv::Rect> ROIs,std::vector<int> ClassIds);
+
 public:
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;
@@ -142,6 +146,8 @@ public:
     cv::Mat mImRGB;
     cv::Mat mImMaskColor;
     std::vector<cv::Rect> mImROIs;
+    std::vector<std::vector<cv::Point2f>> T_Ms;
+    std::vector<SegData> mImSegData;
     // Previous Image
     cv::Mat mImGrayPre;
     std::vector<cv::Point2f> prepoint, nextpoint;
@@ -150,7 +156,8 @@ public:
     std::vector<uchar> state;
     std::vector<float> err;
     std::vector<std::vector<cv::KeyPoint>> mvKeysPre;
-    
+    //std::map<int,float> labelWeight;
+
     std::vector<cv::Point2f> T_M;
     double limit_dis_epi =1; 
     double limit_of_check = 2120;

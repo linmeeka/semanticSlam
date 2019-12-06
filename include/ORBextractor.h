@@ -24,7 +24,7 @@
 #include <vector>
 #include <list>
 #include <opencv/cv.h>
-
+#include "SegData.h"
 
 namespace ORB_SLAM2
 {
@@ -89,6 +89,9 @@ public:
     bool FilterMovingPoint(const cv::Mat &imGray, const cv::Mat &imMask,
                             std::vector<std::vector<cv::KeyPoint>>& mvKeysT,
                             std::vector<cv::Point2f> T);
+
+    bool FilterMovingPoint(const std::vector<SegData> mImSegData, const cv::Mat &imMask,
+                            std::vector<std::vector<cv::KeyPoint>>& mvKeysT);
 
     void ProcessDesp(cv::InputArray _image, cv::InputArray _mask, std::vector<std::vector<cv::KeyPoint>>& _allKeypoints,
                       std::vector<cv::KeyPoint>& _mKeypoints,cv::OutputArray _descriptors);

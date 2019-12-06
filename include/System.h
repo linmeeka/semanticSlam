@@ -64,7 +64,7 @@ public:
     // Returns the camera pose (empty if tracking fails).
     cv::Mat TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::Mat &mask, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
 
-    cv::Mat TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::Mat &mask, const cv::Mat &maskColor,const std::vector<cv::Rect> &ROIs, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
+    cv::Mat TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::Mat &mask, const cv::Mat &maskColor,const std::vector<cv::Rect> &ROIs, const std::vector<int> &ClassIdRes, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
 
     // Process the given rgbd frame. Depthmap must be registered to the RGB frame.
     // Input image: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

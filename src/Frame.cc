@@ -21,6 +21,21 @@ float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
 float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 
+const int LABEL_BACKGROUND=0;
+
+std::vector<float> labelWeight={
+        /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*10*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*20*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*30*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*40*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4,0.0,0.0,
+        /*60*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*70*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*70*/    0.0   
+            };
+
+
 Frame::Frame()
 {}
 
@@ -317,8 +332,8 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 }
 
 // modified by kylin
-Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const cv::Mat &imRGB,
-             const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const std::vector<int> &imClassIds, 
+            const cv::Mat &imRGB, const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mImMask(imMask),mImMaskColor(imMaskColor), mImROIs(imROIs), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth), mImRGB(imRGB)
@@ -351,7 +366,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 
     if(mvKeysTemp.empty())
         return;
-
+    InitSegData(imROIs,imClassIds);
     // dynaslam的滤出动态点方法
     // std::vector<cv::KeyPoint> _mvKeys;
     // cv::Mat _mDescriptors;
@@ -370,9 +385,10 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     // mvKeys = _mvKeys;
     // mDescriptors = _mDescriptors;
 
-    // check polar
+    // 运动物体检测
     cv::Mat imGrayTemp=imGray.clone();
-    if(mImGrayPre.data)
+    flagMoveSemantic=MovingCheckBySemantic();
+    if(flagMoveSemantic&&mImGrayPre.data)
     {
         flagMovePolar=MovingCheckByPolar();
     }
@@ -381,16 +397,9 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
         flagMovePolar=false;
     }
     std::swap(mImGrayPre,imGrayTemp);
-    
 
-    // 语义检测
-    if(flagMovePolar)
-        flagMoveSemantic=MovingCheckBySemantic();
-    else
-        flagMoveSemantic=false;
-    
     if(flagMovePolar&&flagMoveSemantic)
-        mpORBextractorLeft->FilterMovingPoint(imGray,imMask,mvKeysTemp,T_M);
+        mpORBextractorLeft->FilterMovingPoint(mImSegData,imMask,mvKeysTemp);
 
     ExtractORBDesp(0,imGray);
     N = mvKeys.size();
@@ -594,6 +603,30 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &mask, const double &timeStamp
 //     AssignFeaturesToGrid();
 // }
 
+void Frame::InitSegData(std::vector<cv::Rect> ROIs,std::vector<int> ClassIds)
+{
+    //labelWeight[1]=1.0;
+    mImSegData.clear();
+    for(int i=0;i<ROIs.size();i++)
+    {
+        int id=ClassIds[i];
+        if(labelWeight[id]==0)
+            continue;
+        else 
+        {
+            SegData segData;
+            segData.mImROI=ROIs[i];  
+            segData.classId=id;
+            //segData.weight=labelWeight[segData.classId];
+            segData.weight=labelWeight[id];
+            segData.KeyPointNum=0;
+            segData.IsMove=false;
+            mImSegData.push_back(segData);    
+        }
+    }
+    
+}
+
 bool Frame::MovingCheckByPolar()
 {
     // Clear the previous data
@@ -671,29 +704,104 @@ bool Frame::MovingCheckByPolar()
             T_M.push_back(nextpoint[i]);
         }
     }
-    if(T_M.empty())
+
+    // add by kylin
+    bool hasOutlier=false;
+    for (int i = 0; i < prepoint.size(); i++)
+    {
+        if (state[i] == 0)
+            continue;
+        for(auto &segData : mImSegData)
+        {
+            auto roi=segData.mImROI;
+            int x1=roi.x;
+            int x2=roi.x+roi.width;
+            int y1=roi.y;
+            int y2=roi.y+roi.height;
+            int x=nextpoint[i].x;
+            int y=nextpoint[i].y;
+            float weight=segData.weight;
+            if(x>x1&&x<x2&&y>y1&&y<y2)
+            {
+                int val=(int)mImMask.ptr<uchar>(x)[y];
+                if(val!=segData.classId)
+                    continue;
+                double A = F.at<double>(0, 0)*prepoint[i].x + F.at<double>(0, 1)*prepoint[i].y + F.at<double>(0, 2);
+                double B = F.at<double>(1, 0)*prepoint[i].x + F.at<double>(1, 1)*prepoint[i].y + F.at<double>(1, 2);
+                double C = F.at<double>(2, 0)*prepoint[i].x + F.at<double>(2, 1)*prepoint[i].y + F.at<double>(2, 2);
+                double dd = fabs(A*nextpoint[i].x + B*nextpoint[i].y + C) / sqrt(A*A + B*B);
+                dd*=segData.weight;
+                if (dd > limit_dis_epi)
+                {
+                    segData.T_M.push_back(nextpoint[i]);
+                    hasOutlier=true;
+                }
+                segData.KeyPointNum++;
+                break;
+            }
+        }
+    }
+    if(!hasOutlier)
+        return false;
+    else
+    {
+        return true;
+    }
+
+    // if(T_M.empty())
+    //     return false;
+    // else
+    // {
+    //     return true;
+    // }
+    
+}
+
+bool Frame::MovingCheckBySemantic()
+{
+    if(mImSegData.empty())
         return false;
     else
     {
         return true;
     }
     
-}
-
-bool Frame::MovingCheckBySemantic()
-{
-    for ( int m=0; m<mImMask.rows; m+=1 )
-    {
-        for ( int n=0; n<mImMask.cols; n+=1 )
-        {
-            int labelnum = (int)mImMask.ptr<uchar>(m)[n];
-            if(labelnum == 1)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
+    // for(auto &segData : mImSegData)
+    // {
+    //     auto roi=segData.mImROI;
+    //     int x1=roi.x;
+    //     int x2=roi.x+roi.width;
+    //     int y1=roi.y;
+    //     int y2=roi.y+roi.height;
+    //     std::map<int,int> labelCount;
+    //     std::map<int,int>::iterator labelCountIter;
+    //     for(int i=x1;i<x2;i++)
+    //     {
+    //         for(int j=y1;j<y2;j++)
+    //         {
+    //             int val=(int)mImMask.ptr<uchar>(m)[n];
+    //             if(val!=LABEL_BACKGROUND)
+    //             {
+    //                 if(labelCount.find(val)==labelCount.end())
+    //                     labelCount[val]=1;
+    //                 else
+    //                     labelCount[val]++;
+    //             }
+    //         }
+    //     }
+    //     int maxLabel=-1;
+    //     int maxLabelCount=-1;
+    //     for(labelCountIter=labelCount.begin();labelCountIter!=labelCount.end();labelCountIter++)
+    //     {
+    //         if(*labelCountIter->second>maxLabelCount)
+    //         {
+    //             maxLabel=*labelCountIter->first;
+    //             maxLabelCount=*labelCountIter->second;
+    //         }
+    //     }
+    //     segData.weight=labelWeight[maxLabel];
+    //     segData.label=maxLabel
+    // }
 }
 
 void Frame::AssignFeaturesToGrid()

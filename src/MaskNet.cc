@@ -82,26 +82,150 @@ SegmentDynObject::~SegmentDynObject(){
 //     return seg;
 // }
 
-cv::Mat SegmentDynObject::GetMaskResult(std::string dir, std::string name)
+void SegmentDynObject::SaveResult(const cv::Mat &maskRes, const std::vector<cv::Rect> &ROIRes, const std::vector<int> &ClassIdRes, std::string dir, std::string name)
 {
-    PyObject* py_mask_image = PyObject_GetAttrString(this->py_module,"current_segmentation");
-    cv::Mat maskRes = cvt->toMat(py_mask_image).clone();
-    cv::imwrite("seg.png",maskRes);
-    maskRes.cv::Mat::convertTo(maskRes,CV_8U);//0 background y 1 foreground
+    std::string dirMask=dir+"/mask";
     if(dir.compare("no_save")!=0){
-        DIR* _dir = opendir(dir.c_str());
+        DIR* _dir = opendir(dirMask.c_str());
         if (_dir) {closedir(_dir);}
         else if (ENOENT == errno)
         {
-            const int check = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            const int check = mkdir(dirMask.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             if (check == -1) {
-                std::string str = dir;
+                std::string str = dirMask;
                 str.replace(str.end() - 6, str.end(), "");
                 mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             }
         }
-        cv::imwrite(dir+"/"+name,maskRes);
+        cv::imwrite(dirMask+"/"+name+".png",maskRes);
     }
+
+    std::string dirROI=dir+"/roi";
+    if(dir.compare("no_save")!=0){
+        DIR* _dir = opendir(dirROI.c_str());
+        if (_dir) {closedir(_dir);}
+        else if (ENOENT == errno)
+        {
+            const int check = mkdir(dirROI.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if (check == -1) {
+                std::string str = dirROI;
+                str.replace(str.end() - 6, str.end(), "");
+                mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            }
+        }
+        
+        std::ofstream outfile(dirROI+"/"+name+".txt",std::ios::trunc);
+        if(!outfile.is_open())
+        {
+            std::cout<<"can not open file:"<<dirROI<<"/"<<name<<".txt"<<std::endl;
+        }
+        else
+        {
+            for(auto roi : ROIRes)
+            {
+                outfile<<roi.x<<" "<<roi.y<<" "<<roi.width<<" "<<roi.height<<std::endl;
+            }
+        }
+        outfile.close();
+    }
+
+    std::string dirClassId=dir+"/classid";
+    if(dir.compare("no_save")!=0){
+        DIR* _dir = opendir(dirClassId.c_str());
+        if (_dir) {closedir(_dir);}
+        else if (ENOENT == errno)
+        {
+            const int check = mkdir(dirClassId.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if (check == -1) {
+                std::string str = dirClassId;
+                str.replace(str.end() - 6, str.end(), "");
+                mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            }
+        }
+        std::ofstream outfile(dirClassId+"/"+name+".txt", std::ios::trunc);
+        if(!outfile.is_open())
+        {
+            std::cout<<"can not open file:"<<dirClassId<<"/"<<name<<".txt"<<std::endl;
+        }
+        else
+        {
+            for(auto id : ClassIdRes)
+            {
+                outfile<<id<<std::endl;
+            }
+        }
+        outfile.close();
+    }
+}
+
+void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::string dir, std::string name)
+{
+    std::string nameROI=dir+"/roi/"+name+".txt";
+    std::ifstream ROIfile(nameROI);
+    if(ROIfile)
+    {
+        std::string line_info,input_result;
+        std::vector<int> vectorString;
+        while (getline (ROIfile, line_info)) // line中不包括每行的换行符
+        {
+            vectorString.clear();
+            std::stringstream input(line_info);
+            //依次输出到input_result中，并存入vectorString中
+            std::cout<<"roi line_info: "<<line_info<<std::endl;
+            while(input>>input_result)
+            {
+                vectorString.push_back(std::stoi(input_result));
+                std::cout<<input_result<<" ";
+            }
+            std::cout<<std::endl;
+            ROIRes.push_back(cv::Rect(vectorString[0],vectorString[1],vectorString[2],vectorString[3]));
+        }
+    }
+    else
+    {
+        std::cout<<"can not open file:"<<nameROI<<std::endl;
+    }
+
+    std::string nameClassId=dir+"/classid/"+name+".txt";
+    std::ifstream ClassIdfile(nameClassId);
+    if(ClassIdfile)
+    {
+        std::string line_info;
+        while (getline (ClassIdfile, line_info)) // line中不包括每行的换行符
+        {
+            //依次输出到input_result中，并存入vectorString中
+            std::cout<<"class id line_info: "<<line_info<<std::endl;
+            int id=std::stoi(line_info);
+            std::cout<<id<<std::endl;
+            ClassIdRes.push_back(id);
+        }
+    }
+    else
+    {
+        std::cout<<"can not open file:"<<nameClassId<<std::endl;
+    }
+}
+
+cv::Mat SegmentDynObject::GetMaskResult(std::string dir, std::string name)
+{
+    PyObject* py_mask_image = PyObject_GetAttrString(this->py_module,"current_segmentation");
+    cv::Mat maskRes = cvt->toMat(py_mask_image).clone();
+    //cv::imwrite("seg.png",maskRes);
+    maskRes.cv::Mat::convertTo(maskRes,CV_8U);//0 background y 1 foreground
+    // if(dir.compare("no_save")!=0){
+    //     DIR* _dir = opendir(dir.c_str());
+    //     if (_dir) {closedir(_dir);}
+    //     else if (ENOENT == errno)
+    //     {
+    //         const int check = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         if (check == -1) {
+    //             std::string str = dir;
+    //             str.replace(str.end() - 6, str.end(), "");
+    //             mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         }
+    //     }
+    //     cv::imwrite(dir+"/"+name,maskRes);
+    // }
     return maskRes;
 }
 
@@ -140,20 +264,53 @@ std::vector<cv::Rect> SegmentDynObject::GetROIResult(){
     return result;
 }
 
-void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::string dir, std::string name){
-    maskRes = cv::imread(dir+"/"+name,CV_LOAD_IMAGE_UNCHANGED);
+
+std::vector<int> SegmentDynObject::GetClassResult(){
+    std::vector<int> result;
+    assert(result.size() == 0);
+    PyObject* pClassList = PyObject_GetAttrString(this->py_module,"current_class_ids");
+    if(!PySequence_Check(pClassList)) throw std::runtime_error("pClassList is not a sequence.");
+    Py_ssize_t n = PySequence_Length(pClassList);
+    result.reserve(n);
+    //result.reserve(n+1);
+    //result.push_back(0); // Background
+    for (int i = 0; i < n; ++i) {
+        PyObject* o = PySequence_GetItem(pClassList, i);
+        //assert(PyLong_Check(o));
+        result.push_back(PyLong_AsLong(o));
+        Py_DECREF(o);
+    }
+    Py_DECREF(pClassList);
+    return result;
+}
+
+void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::string dir, std::string name){
+    std::string nameMask=dir+"/mask/"+name+".png";
+    maskRes = cv::imread(nameMask,CV_LOAD_IMAGE_UNCHANGED);
+    //maskRes = cv::imread(dir+"/"+name,CV_LOAD_IMAGE_UNCHANGED);
     if(maskRes.empty()){
         PyObject* py_image = cvt->toNDArray(image.clone());
         assert(py_image != NULL);
         PyObject_CallMethod(this->net, const_cast<char*>(this->get_seg_res.c_str()),"(O)",py_image);
+        std::cout<<"detect finish"<<std::endl;
         maskRes=GetMaskResult(dir,name);
         ROIRes=GetROIResult();
+        ClassIdRes=GetClassResult();
+        std::cout<<"get res finish"<<std::endl;
+        SaveResult(maskRes,ROIRes,ClassIdRes,dir,name);
+        std::cout<<"save finish"<<std::endl;
         // for(auto rect:ROIRes)
         // {
         //     cv::rectangle(maskRes, rect, cv::Scalar(255, 0, 0),1);
         // }
     }
+    else
+    {
+        ReadResult(ROIRes,ClassIdRes,dir,name);
+    }
+    
 }
+
 
 cv::Mat SegmentDynObject::GetSegmentation(cv::Mat &image,std::string dir, std::string name){
     // 读取或获取分割结果

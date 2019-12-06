@@ -19,7 +19,36 @@
 #include "MaskNet.h"
 #include <System.h>
 
+
 using namespace std;
+
+std::vector<cv::Scalar> labelColor={
+        /*0*/    cv::Scalar(0,0,0),cv::Scalar(139,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*10*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*20*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*30*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*40*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*50*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*60*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,128),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,128,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+           
+        /*70*/    cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+                cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),cv::Scalar(0,0,0),
+        
+        /*80*/    cv::Scalar(0,0,0)
+            };
 
 void LoadImages(const string &strAssociationFilename, vector<string> &vstrImageFilenamesRGB,
                 vector<string> &vstrImageFilenamesD, vector<double> &vTimestamps);
@@ -145,10 +174,14 @@ int main(int argc, char **argv)
         //cv::Mat mask = cv::Mat::ones(480,640,CV_8U);
         cv::Mat mask,maskColor;
         std::vector<cv::Rect> ROIRes;
+        std::vector<int> ClassIdRes;
         if (argc == 6 || argc == 7)
         {
             cv::Mat maskRCNN;
-            MaskNet->GetSegmentation(imRGB,maskRCNN,ROIRes,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
+            string segDir=vstrImageFilenamesRGB[ni].replace(0,4,"");
+            segDir=segDir.replace(segDir.length()-4,4,"");
+            MaskNet->GetSegmentation(imRGB,maskRCNN,ROIRes,ClassIdRes,string(argv[5]),segDir);
+            //MaskNet->GetSegmentation(imRGB,maskRCNN,ROIRes,ClassIdRes,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
             //maskRCNN = MaskNet->GetSegmentation(imRGB,string(argv[5]),vstrImageFilenamesRGB[ni].replace(0,4,""));
             // cv::Mat maskRCNNdil = maskRCNN.clone();
             // cv::dilate(maskRCNN,maskRCNNdil, kernel);
@@ -175,7 +208,7 @@ int main(int argc, char **argv)
         //if (argc == 7){SLAM.TrackRGBD(imRGB,imD,mask,tframe,imRGBOut,imDOut,maskOut);}
         if (argc == 7){
            
-            SLAM.TrackRGBD(imRGB,imD,mask,maskColor,ROIRes,tframe,imRGBOut,imDOut,maskOut);
+            SLAM.TrackRGBD(imRGB,imD,mask,maskColor,ROIRes,ClassIdRes,tframe,imRGBOut,imDOut,maskOut);
             }
         else {SLAM.TrackRGBD(imRGB,imD,mask,tframe);}
 
@@ -231,34 +264,39 @@ int main(int argc, char **argv)
 
 void getMask(const cv::Mat & maskRCNN, cv::Mat &mask, cv::Mat &maskColor)
 {
-    cv::Scalar color(139,0,0);
+    //cv::Scalar color(139,0,0);
     for(int i=0;i<maskRCNN.rows;i++)
     {
         for(int j=0;j<maskRCNN.cols;j++)
         {
-            if(maskRCNN.at<uchar>(i,j)==0)
+            int val=maskRCNN.at<uchar>(i,j);
+            if(val==0)
                 continue;
             else
             {
                 mask.at<uchar>(i,j)=1;
-                if(maskRCNN.at<uchar>(i,j)==1)
-                {
-                    maskColor.at<cv::Vec3b>(i,j)[0]=color[0];
-                    maskColor.at<cv::Vec3b>(i,j)[1]=color[1];
-                    maskColor.at<cv::Vec3b>(i,j)[2]=color[2];
-                }
-                if(maskRCNN.at<uchar>(i,j)==2)
-                {
-                    maskColor.at<cv::Vec3b>(i,j)[0]=0;
-                    maskColor.at<cv::Vec3b>(i,j)[1]=128;
-                    maskColor.at<cv::Vec3b>(i,j)[2]=0;
-                }
-                if(maskRCNN.at<uchar>(i,j)==3)
-                {
-                    maskColor.at<cv::Vec3b>(i,j)[0]=0;
-                    maskColor.at<cv::Vec3b>(i,j)[1]=0;
-                    maskColor.at<cv::Vec3b>(i,j)[2]=128;
-                }
+                cv::Scalar color=labelColor[val];
+                maskColor.at<cv::Vec3b>(i,j)[0]=color[0];
+                maskColor.at<cv::Vec3b>(i,j)[1]=color[1];
+                maskColor.at<cv::Vec3b>(i,j)[2]=color[2];
+                // if(maskRCNN.at<uchar>(i,j)==1)
+                // {
+                //     maskColor.at<cv::Vec3b>(i,j)[0]=color[0];
+                //     maskColor.at<cv::Vec3b>(i,j)[1]=color[1];
+                //     maskColor.at<cv::Vec3b>(i,j)[2]=color[2];
+                // }
+                // if(maskRCNN.at<uchar>(i,j)==2)
+                // {
+                //     maskColor.at<cv::Vec3b>(i,j)[0]=0;
+                //     maskColor.at<cv::Vec3b>(i,j)[1]=128;
+                //     maskColor.at<cv::Vec3b>(i,j)[2]=0;
+                // }
+                // if(maskRCNN.at<uchar>(i,j)==3)
+                // {
+                //     maskColor.at<cv::Vec3b>(i,j)[0]=0;
+                //     maskColor.at<cv::Vec3b>(i,j)[1]=0;
+                //     maskColor.at<cv::Vec3b>(i,j)[2]=128;
+                // }
             }
         }
     }

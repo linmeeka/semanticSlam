@@ -54,7 +54,7 @@ public:
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const cv::Mat &maskLeft, const cv::Mat &maskRight, const double &timestamp);
     cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const cv::Mat &mask, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
-    cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor, const std::vector<cv::Rect> &ROIs, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
+    cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor, const std::vector<cv::Rect> &ROIs, const std::vector<int> &ClassIdRes, const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut);
     cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const cv::Mat &mask, const double &timestamp);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask, const double &timestamp);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask, const cv::Mat &color, const double &timestamp);

@@ -46,10 +46,17 @@ public:
 	SegmentDynObject();
     ~SegmentDynObject();
     cv::Mat GetSegmentation(cv::Mat &image, std::string dir="no_save", std::string rgb_name="no_file");
-	void GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::string dir="no_save", std::string rgb_name="no_file");
+	void GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, 
+						std::string dir="no_save", std::string rgb_name="no_file");
+
 	cv::Mat GetMaskResult(std::string dir="no_save", std::string rgb_name="no_file");
 	std::vector<cv::Rect> GetROIResult();
-	
+	std::vector<int> GetClassResult();
+
+	void SaveResult(const cv::Mat &maskRes, const std::vector<cv::Rect> &ROIRes, const std::vector<int> &ClassIdRes, 
+					std::string dir="no_save", std::string rgb_name="no_file");
+	void ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, 
+					std::string dir="no_save", std::string rgb_name="no_file");
 };
 
 

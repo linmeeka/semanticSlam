@@ -68,21 +68,21 @@ class Mask:
                'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
                'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
                'teddy bear', 'hair drier', 'toothbrush']
-	self.class_colors = {'BG':0., 'person':1., 'bicycle':0., 'car':0., 'motorcycle':0., 'airplane':0.,
-       'bus':0., 'train':0., 'truck':0., 'boat':0., 'traffic light':0.,
-       'fire hydrant':0., 'stop sign':0., 'parking meter':0., 'bench':0., 'bird':0.,
-       'cat':0., 'dog':0., 'horse':0., 'sheep':0., 'cow':0., 'elephant':0., 'bear':0.,
-       'zebra':0., 'giraffe':0., 'backpack':0., 'umbrella':0., 'handbag':0., 'tie':0.,
-       'suitcase':0., 'frisbee':0., 'skis':0., 'snowboard':0., 'sports ball':0.,
-       'kite':0., 'baseball bat':0., 'baseball glove':0., 'skateboard':0.,
-       'surfboard':0., 'tennis racket':0., 'bottle':0., 'wine glass':0., 'cup':0.,
-       'fork':0., 'knife':0., 'spoon':0., 'bowl':0., 'banana':0., 'apple':0.,
-       'sandwich':0., 'orange':0., 'broccoli':0., 'carrot':0., 'hot dog':0., 'pizza':0.,
-       'donut':0., 'cake':0., 'chair':0., 'couch':0., 'potted plant':0., 'bed':0.,
-       'dining table':0., 'toilet':0., 'tv':3., 'laptop':0., 'mouse':0., 'remote':0.,
-       'keyboard':2., 'cell phone':0., 'microwave':0., 'oven':0., 'toaster':0.,
-       'sink':0., 'refrigerator':0., 'book':0., 'clock':0., 'vase':0., 'scissors':0.,
-       'teddy bear':0., 'hair drier':0., 'toothbrush':0.}
+	self.class_colors = {'BG':0., 'person':1., 'bicycle':2., 'car':3., 'motorcycle':4., 'airplane':5.,
+       'bus':6., 'train':7., 'truck':8., 'boat':9., 'traffic light':10.,
+       'fire hydrant':11., 'stop sign':12., 'parking meter':13., 'bench':14., 'bird':15.,
+       'cat':15., 'dog':17., 'horse':18., 'sheep':19., 'cow':20., 'elephant':21., 'bear':22.,
+       'zebra':23., 'giraffe':24., 'backpack':25., 'umbrella':26., 'handbag':27., 'tie':28.,
+       'suitcase':29., 'frisbee':30., 'skis':31., 'snowboard':32., 'sports ball':33.,
+       'kite':34., 'baseball bat':35., 'baseball glove':36., 'skateboard':37.,
+       'surfboard':38., 'tennis racket':39., 'bottle':40., 'wine glass':41., 'cup':42.,
+       'fork':43., 'knife':44., 'spoon':45., 'bowl':46., 'banana':47., 'apple':48.,
+       'sandwich':49., 'orange':50., 'broccoli':51., 'carrot':52., 'hot dog':53., 'pizza':54.,
+       'donut':55., 'cake':56., 'chair':57., 'couch':58., 'potted plant':59., 'bed':60.,
+       'dining table':61., 'toilet':62., 'tv':63., 'laptop':64., 'mouse':65., 'remote':66.,
+       'keyboard':67., 'cell phone':68., 'microwave':69., 'oven':70., 'toaster':71.,
+       'sink':72., 'refrigerator':73., 'book':74., 'clock':75., 'vase':76., 'scissors':77.,
+       'teddy bear':78., 'hair drier':79., 'toothbrush':80.}
 
 	self.FILTER_CLASSES = [self.class_names.index(x) for x in self.FILTER_CLASSES]
 	self.FILTER_WEIGHTS = {self.class_names.index(x): self.FILTER_WEIGHTS[x] for x in self.FILTER_WEIGHTS}
@@ -114,22 +114,26 @@ class Mask:
         exported_rois = []
 	for m in range(n):
             class_id = class_ids[m]
-            if len(self.FILTER_CLASSES) == 0 or class_id in self.FILTER_CLASSES:
+	    if True:
+            #if len(self.FILTER_CLASSES) == 0 or class_id in self.FILTER_CLASSES:
                 if scores[m] >= self.SCORE_T:
                     mask = masks[:,:,m]
                     val = len(exported_class_ids)+1
-                    if len(self.FILTER_WEIGHTS) > 0 and class_id in self.FILTER_WEIGHTS:
-                        val = self.FILTER_WEIGHTS[class_id]
+                    if len(self.class_colors) > 0 and class_id in self.class_colors:
+                        val = self.class_colors[class_id]
+		    else:
+        			val=0
                     id_image[mask == 1] = val
-                    #exported_class_ids.append(str(class_id))
-                    exported_class_ids.append(int(class_id))
+		    #id_image[mask == 1]=class_id	
+                    #exported_class_ids.append(int(class_id))
+                    exported_class_ids.append(val)
                     exported_rois.append(rois[m,:].tolist())
-    
         global current_segmentation
         global current_class_ids
         global current_bounding_boxes
         current_segmentation=id_image
         current_class_ids=exported_class_ids
+	print exported_class_ids
         current_bounding_boxes=exported_rois
         return id_image, exported_class_ids, exported_rois
 

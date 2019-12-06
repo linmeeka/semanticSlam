@@ -369,8 +369,8 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD,const cv
 }
 
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor,
-                                const std::vector<cv::Rect> &ROIs, const double &timestamp, cv::Mat &imRGBOut,
-                                cv::Mat &imDOut, cv::Mat &maskOut)
+                                const std::vector<cv::Rect> &ROIs, const std::vector<int> &ClassIdRes, const double &timestamp, 
+                                cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut)
 {
     mImGray = imRGB;
     mImDepth=imD;
@@ -416,7 +416,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
 
     //mCurrentFrame = Frame(mImGray,imDepth,imMask,imRGBOut,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     //    imwrite("masktracking.jpg",mask);
-    mCurrentFrame = Frame(mImGray,mImDepth,mask,mImMaskColor,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(mImGray,mImDepth,mask,mImMaskColor,ROIs,ClassIdRes,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
 

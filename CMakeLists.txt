@@ -134,6 +134,7 @@ src/MaskNet.cc
 src/Geometry.cc
 src/pointcloudmapping.cc
 src/segmentation.cc
+src/SegData.cc
 gco-v3.0/maxflow.cpp gco-v3.0/maxflow.cpp gco-v3.0/LinkedBlockList.cpp gco-v3.0/GCoptimization.cpp gco-v3.0/graph.cpp ${HEADERS}
 )
 
@@ -183,3 +184,4 @@ target_link_libraries(mono_kitti ${PROJECT_NAME})
 # ./Examples/Monocular/mono_tum Vocabulary/ORBvoc.txt Examples/Monocular/TUM3.yaml /home/kylin/dataset/TUM/rgbd_dataset_freiburg3_walking_xyz /home/kylin/git/DynaSLAM/mask
 #./Examples/Monocular/mono_tum Vocabulary/ORBvoc.txt Examples/Monocular/TUM3.yaml /home/kylin/dataset/TUM/rgbd_dataset_freiburg3_sitting_halfsphere /home/kylin/git/DynaSLAM/mask_sit_mono
 #./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/Monocular/TUM3.yaml /home/kylin/dataset/TUM/rgbd_dataset_freiburg3_sitting_halfsphere /home/kylin/git/DynaSLAM/Examples/RGB-D/associations/fr3_sitting_halfsphere.txt /home/kylin/git/DynaSLAM/mask_sit_rgbd /home/kylin/git/DynaSLAM/output_sit_rgbd
+#./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUM3.yaml /home/kylin/dataset/TUM/rgbd_dataset_freiburg3_walking_xyz /home/kylin/dataset/TUM/rgbd_dataset_freiburg3_walking_xyz/associations_r_d.txt /home/kylin/git/DynaSLAM/masks/walking_xyz  /home/kylin/git/DynaSLAM/masks/walking_xyz/output

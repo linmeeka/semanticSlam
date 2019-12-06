@@ -210,8 +210,8 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::
 }
 
 cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::Mat &mask,
-                        const cv::Mat &maskColor, const std::vector<cv::Rect> &ROIs, const double &timestamp, cv::Mat &imRGBOut,
-                          cv::Mat &imDOut, cv::Mat &maskOut)
+                        const cv::Mat &maskColor, const std::vector<cv::Rect> &ROIs, const std::vector<int> &ClassIdRes, 
+                        const double &timestamp, cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut)
 {
 
     if(mSensor!=RGBD)
@@ -254,7 +254,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const cv::
     }
     }
 
-    cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,mask,maskColor, ROIs, timestamp,imRGBOut,imDOut,maskOut);
+    cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,mask,maskColor, ROIs, ClassIdRes, timestamp,imRGBOut,imDOut,maskOut);
 
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;

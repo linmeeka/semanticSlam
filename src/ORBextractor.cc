@@ -1147,6 +1147,68 @@ void ORBextractor::ComputePyramid(cv::Mat image)
 
 }
 
+bool ORBextractor::FilterMovingPoint(const std::vector<SegData> mImSegData, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT)
+{
+    bool hasMoveObj=false;
+    double rateTresh=0;
+    for(auto segData:mImSegData)
+    {
+        int outLierNum=segData.T_M.size();
+        double rate=(double)(outLierNum)/(double)(segData.KeyPointNum);
+        if(rate>rateTresh)
+        {
+            segData.IsMove=true;
+            hasMoveObj=true;
+        }
+    }
+    float scale;
+    if(hasMoveObj)
+    {
+        for (int level = 0; level < nlevels; ++level)
+        {
+            vector<cv::KeyPoint>& mkeypoints = mvKeysT[level];
+            int nkeypointsLevel = (int)mkeypoints.size();
+            if(nkeypointsLevel==0)
+                    continue;
+            if (level != 0)
+                scale = mvScaleFactor[level]; 
+            else
+                scale =1; 
+            vector<cv::KeyPoint>::iterator keypoint = mkeypoints.begin();
+            
+            while(keypoint != mkeypoints.end())
+            {
+                    cv::Point2f search_coord = keypoint->pt * scale;
+                    // Search in the semantic image
+                    if(search_coord.x >= (WIDTH -1)) search_coord.x=(WIDTH -1);
+                    if(search_coord.y >= (HEIGHT -1)) search_coord.y=(HEIGHT -1);
+                    bool isErased=false;
+                    for(auto segData:mImSegData)
+                    {
+                        auto roi=segData.mImROI;
+                        int x1=roi.x;
+                        int x2=roi.x+roi.width;
+                        int y1=roi.y;
+                        int y2=roi.y+roi.height;
+                        int label_coord =(int)imMask.ptr<uchar>((int)search_coord.y)[(int)search_coord.x];
+                        if(segData.IsMove&&label_coord==segData.classId&&search_coord.x>x1&&search_coord.x<x2&&search_coord.y>y1&&search_coord.y<y2)
+                        {
+                            keypoint=mkeypoints.erase(keypoint);
+                            isErased=true;
+                            break;
+                        }
+                    }
+                    if(!isErased)
+                    {
+                        keypoint++;
+                    }
+                }
+            }
+        
+    }
+    return hasMoveObj;
+}
+
 bool ORBextractor::FilterMovingPoint( const cv::Mat &imGray, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT,std::vector<cv::Point2f> T)
 {
    
