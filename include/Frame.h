@@ -149,17 +149,17 @@ public:
     std::vector<std::vector<cv::Point2f>> T_Ms;
     std::vector<SegData> mImSegData;
     // Previous Image
-    cv::Mat mImGrayPre;
-    std::vector<cv::Point2f> prepoint, nextpoint;
-    std::vector<cv::Point2f> F_prepoint, F_nextpoint;
-    std::vector<cv::Point2f> F2_prepoint, F2_nextpoint;
-    std::vector<uchar> state;
-    std::vector<float> err;
-    std::vector<std::vector<cv::KeyPoint>> mvKeysPre;
+    // cv::Mat mImGrayPre;
+    // std::vector<cv::Point2f> prepoint, nextpoint;
+    // std::vector<cv::Point2f> F_prepoint, F_nextpoint;
+    // std::vector<cv::Point2f> F2_prepoint, F2_nextpoint;
+    // std::vector<uchar> state;
+    // std::vector<float> err;
+    // std::vector<std::vector<cv::KeyPoint>> mvKeysPre;
     //std::map<int,float> labelWeight;
 
     std::vector<cv::Point2f> T_M;
-    double limit_dis_epi =1; 
+    double limit_dis_epi =0.1; 
     double limit_of_check = 2120;
     int limit_edge_corner = 5;
     int flagMovePolar,flagMoveSemantic ;

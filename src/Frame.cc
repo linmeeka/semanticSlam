@@ -22,6 +22,25 @@ float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
 float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 
 const int LABEL_BACKGROUND=0;
+cv::Mat mImGrayPre;
+std::vector<cv::Point2f> prepoint, nextpoint;
+std::vector<cv::Point2f> F_prepoint, F_nextpoint;
+std::vector<cv::Point2f> F2_prepoint, F2_nextpoint;
+
+std::vector<uchar> state;
+std::vector<float> err;
+std::vector<std::vector<cv::KeyPoint>> mvKeysPre;
+// std::vector<float> labelWeight={
+//         /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*10*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*20*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*30*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*40*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4,0.0,0.0,
+//         /*60*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*70*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+//         /*70*/    0.0   
+//             };
 
 std::vector<float> labelWeight={
         /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
@@ -29,7 +48,7 @@ std::vector<float> labelWeight={
         /*20*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
         /*30*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
         /*40*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-        /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4,0.0,0.0,
+        /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
         /*60*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
         /*70*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
         /*70*/    0.0   
@@ -362,8 +381,8 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
                                         cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
                                         cv::Point( dilation_size, dilation_size ) );
-    cv::erode(imMask, Mask_dil, kernel);
-
+    //cv::erode(imMask, Mask_dil, kernel);
+    //mImMask=Mask_dil;
     if(mvKeysTemp.empty())
         return;
     InitSegData(imROIs,imClassIds);
@@ -399,7 +418,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     std::swap(mImGrayPre,imGrayTemp);
 
     if(flagMovePolar&&flagMoveSemantic)
-        mpORBextractorLeft->FilterMovingPoint(mImSegData,imMask,mvKeysTemp);
+        mpORBextractorLeft->FilterMovingPoint(mImSegData,mImMask,mvKeysTemp);
 
     ExtractORBDesp(0,imGray);
     N = mvKeys.size();
@@ -670,40 +689,40 @@ bool Frame::MovingCheckByPolar()
     // F-Matrix
     cv::Mat mask = cv::Mat(cv::Size(1, 300), CV_8UC1);
     cv::Mat F = cv::findFundamentalMat(F_prepoint, F_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
-    for (int i = 0; i < mask.rows; i++)
-    {
-        if (mask.at<uchar>(i, 0) == 0);
-        else
-        {
-            // Circle(pre_frame, F_prepoint[i], 6, Scalar(255, 255, 0), 3);
-            double A = F.at<double>(0, 0)*F_prepoint[i].x + F.at<double>(0, 1)*F_prepoint[i].y + F.at<double>(0, 2);
-            double B = F.at<double>(1, 0)*F_prepoint[i].x + F.at<double>(1, 1)*F_prepoint[i].y + F.at<double>(1, 2);
-            double C = F.at<double>(2, 0)*F_prepoint[i].x + F.at<double>(2, 1)*F_prepoint[i].y + F.at<double>(2, 2);
-            double dd = fabs(A*F_nextpoint[i].x + B*F_nextpoint[i].y + C) / sqrt(A*A + B*B); //Epipolar constraints
-            if (dd <= 0.1)
-            {
-                F2_prepoint.push_back(F_prepoint[i]);
-                F2_nextpoint.push_back(F_nextpoint[i]);
-            }
-        }
-    }
-    F_prepoint = F2_prepoint;
-    F_nextpoint = F2_nextpoint;
+    // for (int i = 0; i < mask.rows; i++)
+    // {
+    //     if (mask.at<uchar>(i, 0) == 0);
+    //     else
+    //     {
+    //         // Circle(pre_frame, F_prepoint[i], 6, Scalar(255, 255, 0), 3);
+    //         double A = F.at<double>(0, 0)*F_prepoint[i].x + F.at<double>(0, 1)*F_prepoint[i].y + F.at<double>(0, 2);
+    //         double B = F.at<double>(1, 0)*F_prepoint[i].x + F.at<double>(1, 1)*F_prepoint[i].y + F.at<double>(1, 2);
+    //         double C = F.at<double>(2, 0)*F_prepoint[i].x + F.at<double>(2, 1)*F_prepoint[i].y + F.at<double>(2, 2);
+    //         double dd = fabs(A*F_nextpoint[i].x + B*F_nextpoint[i].y + C) / sqrt(A*A + B*B); //Epipolar constraints
+    //         if (dd <= 0.1)
+    //         {
+    //             F2_prepoint.push_back(F_prepoint[i]);
+    //             F2_nextpoint.push_back(F_nextpoint[i]);
+    //         }
+    //     }
+    // }
+    // F_prepoint = F2_prepoint;
+    // F_nextpoint = F2_nextpoint;
 
-    for (int i = 0; i < prepoint.size(); i++)
-    {
-        if (state[i] != 0)
-        {
-            double A = F.at<double>(0, 0)*prepoint[i].x + F.at<double>(0, 1)*prepoint[i].y + F.at<double>(0, 2);
-            double B = F.at<double>(1, 0)*prepoint[i].x + F.at<double>(1, 1)*prepoint[i].y + F.at<double>(1, 2);
-            double C = F.at<double>(2, 0)*prepoint[i].x + F.at<double>(2, 1)*prepoint[i].y + F.at<double>(2, 2);
-            double dd = fabs(A*nextpoint[i].x + B*nextpoint[i].y + C) / sqrt(A*A + B*B);
+    // for (int i = 0; i < prepoint.size(); i++)
+    // {
+    //     if (state[i] != 0)
+    //     {
+    //         double A = F.at<double>(0, 0)*prepoint[i].x + F.at<double>(0, 1)*prepoint[i].y + F.at<double>(0, 2);
+    //         double B = F.at<double>(1, 0)*prepoint[i].x + F.at<double>(1, 1)*prepoint[i].y + F.at<double>(1, 2);
+    //         double C = F.at<double>(2, 0)*prepoint[i].x + F.at<double>(2, 1)*prepoint[i].y + F.at<double>(2, 2);
+    //         double dd = fabs(A*nextpoint[i].x + B*nextpoint[i].y + C) / sqrt(A*A + B*B);
 
-            // Judge outliers
-            if (dd <= limit_dis_epi) continue;
-            T_M.push_back(nextpoint[i]);
-        }
-    }
+    //         // Judge outliers
+    //         if (dd <= limit_dis_epi) continue;
+    //         T_M.push_back(nextpoint[i]);
+    //     }
+    // }
 
     // add by kylin
     bool hasOutlier=false;

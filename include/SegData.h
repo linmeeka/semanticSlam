@@ -21,6 +21,14 @@ public:
     SegData(){
         KeyPointNum=0;
     }
+    void setMoveTrue()
+    {
+        IsMove=true;
+    }
+    void setMoveFalse()
+    {
+        IsMove=false;
+    }
     // static std::vector<float> labelWeight;
     // static std::vector<cv::Scalar> labelColor;
 };

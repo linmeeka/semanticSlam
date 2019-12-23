@@ -171,13 +171,13 @@ void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int
             vectorString.clear();
             std::stringstream input(line_info);
             //依次输出到input_result中，并存入vectorString中
-            std::cout<<"roi line_info: "<<line_info<<std::endl;
+           // std::cout<<"roi line_info: "<<line_info<<std::endl;
             while(input>>input_result)
             {
                 vectorString.push_back(std::stoi(input_result));
-                std::cout<<input_result<<" ";
+                //std::cout<<input_result<<" ";
             }
-            std::cout<<std::endl;
+            //std::cout<<std::endl;
             ROIRes.push_back(cv::Rect(vectorString[0],vectorString[1],vectorString[2],vectorString[3]));
         }
     }
@@ -194,9 +194,9 @@ void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int
         while (getline (ClassIdfile, line_info)) // line中不包括每行的换行符
         {
             //依次输出到input_result中，并存入vectorString中
-            std::cout<<"class id line_info: "<<line_info<<std::endl;
+            //std::cout<<"class id line_info: "<<line_info<<std::endl;
             int id=std::stoi(line_info);
-            std::cout<<id<<std::endl;
+            //std::cout<<id<<std::endl;
             ClassIdRes.push_back(id);
         }
     }

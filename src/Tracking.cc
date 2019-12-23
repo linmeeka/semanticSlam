@@ -393,8 +393,10 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
             cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
     }
     cv::Mat _mImGray = mImGray.clone();
-    mImGray = mImGray*0;
-    _mImGray.copyTo(mImGray,imMask);
+    //mImGray = mImGray*0;
+    // imMask为mImGray的蒙版，1通0不通
+    //_mImGray.copyTo(mImGray,imMask);
+    imMask.copyTo(mImGray,imMask);
 
    // cout<<"test start"<<endl;
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || mImDepth.type()!=CV_32F)
@@ -416,7 +418,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
 
     //mCurrentFrame = Frame(mImGray,imDepth,imMask,imRGBOut,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     //    imwrite("masktracking.jpg",mask);
-    mCurrentFrame = Frame(mImGray,mImDepth,mask,mImMaskColor,ROIs,ClassIdRes,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(_mImGray,mImDepth,mask,mImMaskColor,ROIs,ClassIdRes,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
 

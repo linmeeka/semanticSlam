@@ -90,7 +90,7 @@ public:
                             std::vector<std::vector<cv::KeyPoint>>& mvKeysT,
                             std::vector<cv::Point2f> T);
 
-    bool FilterMovingPoint(const std::vector<SegData> mImSegData, const cv::Mat &imMask,
+    bool FilterMovingPoint(std::vector<SegData> &mImSegData, const cv::Mat &imMask,
                             std::vector<std::vector<cv::KeyPoint>>& mvKeysT);
 
     void ProcessDesp(cv::InputArray _image, cv::InputArray _mask, std::vector<std::vector<cv::KeyPoint>>& _allKeypoints,

@@ -1147,17 +1147,18 @@ void ORBextractor::ComputePyramid(cv::Mat image)
 
 }
 
-bool ORBextractor::FilterMovingPoint(const std::vector<SegData> mImSegData, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT)
+bool ORBextractor::FilterMovingPoint(std::vector<SegData> &mImSegData, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT)
 {
     bool hasMoveObj=false;
     double rateTresh=0;
-    for(auto segData:mImSegData)
+    for(auto &segData:mImSegData)
     {
         int outLierNum=segData.T_M.size();
         double rate=(double)(outLierNum)/(double)(segData.KeyPointNum);
         if(rate>rateTresh)
         {
-            segData.IsMove=true;
+            //segData.IsMove=true;
+            segData.setMoveTrue();
             hasMoveObj=true;
         }
     }

@@ -143,6 +143,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
 {
     PointCloud::Ptr tmp( new PointCloud() );
     // point cloud is null ptr
+    // 3*3的像素区域取一个点
     for ( int m=0; m<depth.rows; m+=3 )
     {
         for ( int n=0; n<depth.cols; n+=3 )
@@ -223,6 +224,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
 
 void PointCloudMapping::viewer()
 {
+ //   return ;
     std::cout<<"enter viewer "<<std::endl;
     // std::vector<cv::Scalar> colors;
     // string line, number;
@@ -632,11 +634,13 @@ void PointCloudMapping::cpf_seg(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr input_cl
     seg.setConfig(config);
     pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
     pcl::VoxelGrid<PointT> sor;
+    
     sor.setInputCloud(input_cloud_ptr);
     sor.setLeafSize (0.005f, 0.005f, 0.005f);
     sor.filter(*cloud_filtered);
     std::cerr << "Number of points after filtered " << cloud_filtered->size() << std::endl;
     seg.setPointCloud(input_cloud_ptr);
+    
     // seg.doSegmentation();
     // pcl::PointCloud<pcl::PointXYZL>::Ptr segmented_cloud_ptr;
     // segmented_cloud_ptr = seg.getSegmentedPointCloud();

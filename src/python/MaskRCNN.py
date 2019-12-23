@@ -112,6 +112,8 @@ class Mask:
 	id_image = np.zeros([h,w], np.uint8)
         exported_class_ids = []
         exported_rois = []
+	print "class_ids:"
+	print class_ids
 	for m in range(n):
             class_id = class_ids[m]
 	    if True:
@@ -119,10 +121,12 @@ class Mask:
                 if scores[m] >= self.SCORE_T:
                     mask = masks[:,:,m]
                     val = len(exported_class_ids)+1
+		    #print "class id is: "+class_id
                     if len(self.class_colors) > 0 and class_id in self.class_colors:
                         val = self.class_colors[class_id]
 		    else:
         			val=0
+		    val=class_id
                     id_image[mask == 1] = val
 		    #id_image[mask == 1]=class_id	
                     #exported_class_ids.append(int(class_id))
@@ -136,6 +140,7 @@ class Mask:
 	print exported_class_ids
         current_bounding_boxes=exported_rois
         return id_image, exported_class_ids, exported_rois
+
 
     def GetDynSeg(self,image,image2=None):
 	h = image.shape[0]
