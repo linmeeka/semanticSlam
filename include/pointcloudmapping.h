@@ -21,31 +21,34 @@
 #define POINTCLOUDMAPPING_H
 
 #include "System.h"
-#include <pcl/common/transforms.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-#include <condition_variable>
+#include <vector>
+#include "ModelManager.h"
+// #include <pcl/common/transforms.h>
+// #include <pcl/point_types.h>
+// #include <pcl/filters/voxel_grid.h>
+// #include <pcl/filters/statistical_outlier_removal.h>
+// #include <condition_variable>
 
-// for clustering
-#include <pcl/filters/extract_indices.h>
-#include <pcl/ModelCoefficients.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/kdtree/kdtree.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/segmentation/extract_clusters.h>
-#include <pcl/segmentation/region_growing.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/filters/passthrough.h>
-#include <pcl/search/search.h>
-#include <pcl/search/kdtree.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/segmentation/conditional_euclidean_clustering.h>
-#include <pcl/segmentation/region_growing_rgb.h>
-#include <iostream>
+// // for clustering
+// #include <pcl/filters/extract_indices.h>
+// #include <pcl/ModelCoefficients.h>
+// #include <pcl/features/normal_3d.h>
+// #include <pcl/kdtree/kdtree.h>
+// #include <pcl/sample_consensus/method_types.h>
+// #include <pcl/sample_consensus/model_types.h>
+// #include <pcl/segmentation/sac_segmentation.h>
+// #include <pcl/segmentation/extract_clusters.h>
+// #include <pcl/segmentation/region_growing.h>
+// #include <pcl/io/pcd_io.h>
+// #include <pcl/features/normal_3d.h>
+// #include <pcl/filters/passthrough.h>
+// #include <pcl/search/search.h>
+// #include <pcl/search/kdtree.h>
+// #include <pcl/filters/voxel_grid.h>
+// #include <pcl/segmentation/conditional_euclidean_clustering.h>
+// #include <pcl/segmentation/region_growing_rgb.h>
+// #include <iostream>
+
 
 
 typedef pcl::PointXYZRGBA PointT;
@@ -70,40 +73,18 @@ public:
     PointCloudMapping( double resolution_ );
     std::vector<cv::Scalar> colors;
     // 插入一个keyframe，会更新一次地图
-    void insertKeyFrame( KeyFrame* kf, cv::Mat& color, cv::Mat& depth );
+    void insertKeyFrame( KeyFrame* kf, cv::Mat& color, cv::Mat& depth cv::Mat& mask);
     void shutdown();
     void viewer();
-    void final_process();
-//    void filtCloud(float leaveSize = 0.014f);
-//    void removePlane();
-//    void cluster();
 
-    cv::Mat dye_gray(cv::Mat &gray);
-    PointCloud::Ptr ECE(PointCloud::Ptr cloud);
-    PointCloud::Ptr cylinderSeg(PointCloud::Ptr cloud);
-    PointCloud::Ptr regionGrowingSeg(PointCloud::Ptr cloud_in);
-    PointCloud::Ptr colorRegionGrowingSeg(pcl::PointCloud <pcl::PointXYZRGB>::Ptr  cloud_in);
-
-    PointCloud::Ptr CEC(const std::string& filename);
-    void PointCloudXYZRGBAtoXYZ(const pcl::PointCloud<pcl::PointXYZRGBA>& in,
-                            pcl::PointCloud<pcl::PointXYZ>& out);
-    void PointXYZRGBAtoXYZ(const pcl::PointXYZRGBA& in,
-                                pcl::PointXYZ& out);
-    void PointXYZRGBtoXYZRGBA(const pcl::PointXYZRGB& in,
-                                pcl::PointXYZRGBA& out);
-    void PointCloudXYZRGBtoXYZRGBA(const pcl::PointCloud<pcl::PointXYZRGB>& in,
-                            pcl::PointCloud<pcl::PointXYZRGBA>& out);
-    void PointXYZLtoXYZ(const pcl::PointXYZL& in,
-                   pcl::PointXYZ& out);
-    void obj2pcd(const std::string& in, const std::string& out);
-    void poisson_reconstruction(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr incloud);
     void cpf_seg(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr incloud);
 
     
 protected:
-    PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth);
-    PointCloud::Ptr globalMap;
-    PointLCloudT::Ptr lableMap;
+    PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask);
+    PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, PointCloud::Ptr &tmps);
+    PointCloud::Ptr globalMap; // background
+    PointCloud::Ptr background;
     shared_ptr<thread>  viewerThread;   
     
     bool    shutDownFlag    =false;
@@ -116,28 +97,15 @@ protected:
     vector<KeyFrame*>       keyframes;
     vector<cv::Mat>         colorImgs;
     vector<cv::Mat>         depthImgs;
+    vector<cv::Mat>         maskImgs;
     mutex                   keyframeMutex;
     uint16_t                lastKeyframeSize =0;
-    //add by me begin
-//    pcl::SACSegmentation<PointT> seg;
-//    pcl::PointIndices::Ptr inliers;
-//    pcl::ModelCoefficients::Ptr coefficients;
-//    pcl::ExtractIndices<PointT> extract;
-//
-//    pcl::VoxelGrid<PointT> vg;
-//    pcl::PassThrough<PointT> pass;
-//
-//    PointCloud::Ptr pointCloud_raw;
-//    PointCloud::Ptr pointCloud_filtered;
-//    PointCloud::Ptr pointCloud_removal;
-//    PointCloud::Ptr pointCloud_cluster;
-//    PointCloud::Ptr pointCloud_plane;
-//    int colorForCluster[20][3];
 
-    //add by me end
     double resolution = 0.01;
     pcl::VoxelGrid<PointT>  voxel;
     pcl::StatisticalOutlierRemoval<PointT> sor;// 创建滤波器对象
+
+    ModelManager modelManager;
 
 };
 

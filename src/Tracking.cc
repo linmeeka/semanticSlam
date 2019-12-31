@@ -375,6 +375,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
     mImGray = imRGB;
     mImDepth=imD;
     mImMaskColor=maskColor;
+    mImMask=mask;
     cv::Mat imMask = mask;
     cv::Mat _imRGB = imRGB.clone();
 
@@ -1593,7 +1594,7 @@ void Tracking::CreateNewKeyFrame()
 
     mpLocalMapper->SetNotStop(false);
 
-    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth );
+    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,);
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;

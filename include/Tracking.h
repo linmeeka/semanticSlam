@@ -94,6 +94,7 @@ public:
     cv::Mat mImGray;
     cv::Mat mImDepth;
     cv::Mat mImMaskColor;
+    cv::Mat mImMask;
 
     // Initialization Variables (Monocular)
     std::vector<int> mvIniLastMatches;
