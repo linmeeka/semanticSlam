@@ -17,8 +17,8 @@
 //  * 
 //  */
 
-// #ifndef POINTCLOUDMAPPING_H
-// #define POINTCLOUDMAPPING_H
+// #ifndef POINTCLOUDMAPPINGORI_H
+// #define POINTCLOUDMAPPINGORI_H
 
 // #include "System.h"
 // #include <pcl/common/transforms.h>

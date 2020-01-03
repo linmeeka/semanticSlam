@@ -12,7 +12,8 @@
 #include <opencv2/opencv.hpp>
 #include "Model.h"
 
-
+typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointCloud;
 //class Model;
 using namespace ORB_SLAM2;
 //namespace ORB_SLAM2
@@ -27,10 +28,6 @@ public:
         mLostNumThr = lost_num_thr;
         mMatchTHr = match_thr;
     };
-    ModelManager()
-    {
-
-    }
 
     int UpdateObjectInstances(KeyFrame* kf, std::vector<std::shared_ptr<SegData>>& SegDatas);
     void UpdateObjectPointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask, PointCloud::Ptr &globalModel);

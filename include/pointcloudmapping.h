@@ -22,36 +22,35 @@
 
 #include "System.h"
 #include <vector>
+#include <queue>
 #include "ModelManager.h"
-// #include <pcl/common/transforms.h>
-// #include <pcl/point_types.h>
-// #include <pcl/filters/voxel_grid.h>
-// #include <pcl/filters/statistical_outlier_removal.h>
-// #include <condition_variable>
+#include <iostream>
+#include <condition_variable>
+#include <pcl/common/transforms.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
-// // for clustering
-// #include <pcl/filters/extract_indices.h>
-// #include <pcl/ModelCoefficients.h>
-// #include <pcl/features/normal_3d.h>
-// #include <pcl/kdtree/kdtree.h>
-// #include <pcl/sample_consensus/method_types.h>
-// #include <pcl/sample_consensus/model_types.h>
-// #include <pcl/segmentation/sac_segmentation.h>
-// #include <pcl/segmentation/extract_clusters.h>
-// #include <pcl/segmentation/region_growing.h>
-// #include <pcl/io/pcd_io.h>
-// #include <pcl/features/normal_3d.h>
-// #include <pcl/filters/passthrough.h>
-// #include <pcl/search/search.h>
-// #include <pcl/search/kdtree.h>
-// #include <pcl/filters/voxel_grid.h>
-// #include <pcl/segmentation/conditional_euclidean_clustering.h>
-// #include <pcl/segmentation/region_growing_rgb.h>
-// #include <iostream>
+// for clustering
+#include <pcl/filters/extract_indices.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/segmentation/region_growing.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/search/search.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/segmentation/conditional_euclidean_clustering.h>
+#include <pcl/segmentation/region_growing_rgb.h>
+#include <iostream>
 
-
-
-typedef pcl::PointXYZRGBA PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
 typedef pcl::PointNormal PointNT;
 typedef pcl::PointCloud<PointNT> PointNCloudT;
@@ -59,9 +58,10 @@ typedef pcl::PointXYZL PointLT;
 typedef pcl::PointCloud<PointLT> PointLCloudT;
 typedef pcl::PointCloud<pcl::PointXYZL> pointcloudL;
 
+typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointCloud;
 
 using namespace ORB_SLAM2;
-
 
 class PointCloudMapping
 {
@@ -70,10 +70,11 @@ public:
     typedef pcl::PointCloud<PointT> PointCloud;
     enum cloudType
     {RAW = 0, FILTERED = 1, REMOVAL = 2, CLUSTER = 3};
-    PointCloudMapping( double resolution_ );
+    
+    PointCloudMapping(double resolution_);
     std::vector<cv::Scalar> colors;
     // 插入一个keyframe，会更新一次地图
-    void insertKeyFrame( KeyFrame* kf, cv::Mat& color, cv::Mat& depth cv::Mat& mask);
+    void insertKeyFrame( KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask, std::vector<std::shared_ptr<SegData>> &segDatas);
     void shutdown();
     void viewer();
 
@@ -82,7 +83,6 @@ public:
     
 protected:
     PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask);
-    PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, PointCloud::Ptr &tmps);
     PointCloud::Ptr globalMap; // background
     PointCloud::Ptr background;
     shared_ptr<thread>  viewerThread;   
@@ -94,10 +94,15 @@ protected:
     mutex               keyFrameUpdateMutex;
     
     // data to generate point clouds
-    vector<KeyFrame*>       keyframes;
-    vector<cv::Mat>         colorImgs;
-    vector<cv::Mat>         depthImgs;
-    vector<cv::Mat>         maskImgs;
+    // vector<KeyFrame*>       keyframes;
+    // vector<cv::Mat>         colorImgs;
+    // vector<cv::Mat>         depthImgs;
+    // vector<cv::Mat>         maskImgs;
+    queue<KeyFrame*>       keyframes;
+    queue<cv::Mat>         colorImgs;
+    queue<cv::Mat>         depthImgs;
+    queue<cv::Mat>         maskImgs;
+    queue<std::vector<std::shared_ptr<SegData>>>  segDataQue;
     mutex                   keyframeMutex;
     uint16_t                lastKeyframeSize =0;
 

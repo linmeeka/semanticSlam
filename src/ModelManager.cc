@@ -117,10 +117,10 @@ void ModelManager::BuildNewModel(const long unsigned int kf_index, const std::sh
 void ModelManager::UpdateObjectPointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask, PointCloud::Ptr &globalModel)
 {
     std::unordered_map<int,std::shared_ptr<Model>>::iterator it;
-    for(it=mTrackingInstances.begin();it!=it=mTrackingInstances.end();it++)
+    for(it=mTrackingInstances.begin();it!=mTrackingInstances.end();it++)
     {
         auto model=it->second;
         model->UpdatePointCloud(kf, color, depth, mask);
-        *globalModel+=model->getPointCloudModel();
+        *globalModel+=*(model->model);
     }
 }

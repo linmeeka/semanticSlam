@@ -351,10 +351,10 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 }
 
 // modified by kylin
-Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const std::vector<int> &imClassIds, 
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, std::vector<std::shared_ptr<SegData>> &segDatas, 
             const cv::Mat &imRGB, const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    :mImMask(imMask),mImMaskColor(imMaskColor), mImROIs(imROIs), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
+    :mImMask(imMask),mImMaskColor(imMaskColor), mImSegData(segDatas), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth), mImRGB(imRGB)
 {
     // Frame ID
@@ -385,24 +385,6 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     //mImMask=Mask_dil;
     if(mvKeysTemp.empty())
         return;
-    InitSegData(imROIs,imClassIds);
-    // dynaslam的滤出动态点方法
-    // std::vector<cv::KeyPoint> _mvKeys;
-    // cv::Mat _mDescriptors;
-    // // 在这里就把动态范围的点滤出了
-    // for (size_t i(0); i < mvKeys.size(); ++i)
-    // {
-    //    //    cout<<"test finishi"<<endl;
-    //     int val = (int)Mask_dil.at<uchar>(mvKeys[i].pt.y,mvKeys[i].pt.x);
-    //     //   cout<<"test finishi2"<<endl;
-    //     if (val == 1)
-    //     {
-    //         _mvKeys.push_back(mvKeys[i]);
-    //         _mDescriptors.push_back(mDescriptors.row(i));
-    //     }
-    // }
-    // mvKeys = _mvKeys;
-    // mDescriptors = _mDescriptors;
 
     // 运动物体检测
     cv::Mat imGrayTemp=imGray.clone();
@@ -539,113 +521,6 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &mask, const double &timeStamp
     AssignFeaturesToGrid();
 }
 
-// Frame::Frame(const cv::Mat &imGray, const cv::Mat &mask, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, const float &imMaskColor)
-//     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
-//      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mImMaskColor(imMaskColor)
-// {
-//     // Frame ID
-//     mnId=nNextId++;
-
-//     // Scale Level Info
-//     mnScaleLevels = mpORBextractorLeft->GetLevels();
-//     mfScaleFactor = mpORBextractorLeft->GetScaleFactor();
-//     mfLogScaleFactor = log(mfScaleFactor);
-//     mvScaleFactors = mpORBextractorLeft->GetScaleFactors();
-//     mvInvScaleFactors = mpORBextractorLeft->GetInverseScaleFactors();
-//     mvLevelSigma2 = mpORBextractorLeft->GetScaleSigmaSquares();
-//     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
-
-//     // ORB extraction
-//     ExtractORB(0,imGray);
-
-//     // Delete those ORB points that fall in mask borders
-//     cv::Mat Mask_dil = mask.clone();
-//     int dilation_size = 15;
-//     cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
-//                                         cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-//                                         cv::Point( dilation_size, dilation_size ) );
-//     cv::erode(mask, Mask_dil, kernel);
-
-//     if(mvKeys.empty())
-//         return;
-
-//     std::vector<cv::KeyPoint> _mvKeys;
-//     cv::Mat _mDescriptors;
-
-//     for (size_t i(0); i < mvKeys.size(); ++i)
-//     {
-//         int val = (int)Mask_dil.at<uchar>(mvKeys[i].pt.y,mvKeys[i].pt.x);
-//         if (val == 1)
-//         {
-//             _mvKeys.push_back(mvKeys[i]);
-//             _mDescriptors.push_back(mDescriptors.row(i));
-//         }
-//     }
-
-//     mvKeys = _mvKeys;
-//     mDescriptors = _mDescriptors;
-
-//     if(mvKeys.empty())
-//         return;
-
-//     N = mvKeys.size();
-
-//     UndistortKeyPoints();
-
-//     // Set no stereo information
-//     mvuRight = vector<float>(N,-1);
-//     mvDepth = vector<float>(N,-1);
-
-//     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
-//     mvbOutlier = vector<bool>(N,false);
-
-//     // This is done only for the first Frame (or after a change in the calibration)
-//     if(mbInitialComputations)
-//     {
-//         ComputeImageBounds(imGray);
-
-//         mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
-//         mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
-
-//         fx = K.at<float>(0,0);
-//         fy = K.at<float>(1,1);
-//         cx = K.at<float>(0,2);
-//         cy = K.at<float>(1,2);
-//         invfx = 1.0f/fx;
-//         invfy = 1.0f/fy;
-
-//         mbInitialComputations=false;
-//     }
-
-//     mb = mbf/fx;
-
-//     AssignFeaturesToGrid();
-// }
-
-void Frame::InitSegData(std::vector<cv::Rect> ROIs,std::vector<int> ClassIds)
-{
-    //labelWeight[1]=1.0;
-    mImSegData.clear();
-    for(int i=0;i<ROIs.size();i++)
-    {
-        int id=ClassIds[i];
-        if(labelWeight[id]==0)
-            continue;
-        else 
-        {
-            SegData segData;
-            segData.mImROI=ROIs[i];  
-            segData.classId=id;
-            //segData.weight=labelWeight[segData.classId];
-            segData.weight=labelWeight[id];
-            segData.KeyPointNum=0;
-            segData.IsMove=false;
-            mImSegData.push_back(segData);    
-        }
-    }
-    
-}
-
 bool Frame::MovingCheckByPolar()
 {
     // Clear the previous data
@@ -732,30 +607,30 @@ bool Frame::MovingCheckByPolar()
             continue;
         for(auto &segData : mImSegData)
         {
-            auto roi=segData.mImROI;
+            auto roi=segData->mImROI;
             int x1=roi.x;
             int x2=roi.x+roi.width;
             int y1=roi.y;
             int y2=roi.y+roi.height;
             int x=nextpoint[i].x;
             int y=nextpoint[i].y;
-            float weight=segData.weight;
+            float weight=segData->weight;
             if(x>x1&&x<x2&&y>y1&&y<y2)
             {
                 int val=(int)mImMask.ptr<uchar>(x)[y];
-                if(val!=segData.classId)
+                if(val!=segData->classId)
                     continue;
                 double A = F.at<double>(0, 0)*prepoint[i].x + F.at<double>(0, 1)*prepoint[i].y + F.at<double>(0, 2);
                 double B = F.at<double>(1, 0)*prepoint[i].x + F.at<double>(1, 1)*prepoint[i].y + F.at<double>(1, 2);
                 double C = F.at<double>(2, 0)*prepoint[i].x + F.at<double>(2, 1)*prepoint[i].y + F.at<double>(2, 2);
                 double dd = fabs(A*nextpoint[i].x + B*nextpoint[i].y + C) / sqrt(A*A + B*B);
-                dd*=segData.weight;
+                dd*=weight;
                 if (dd > limit_dis_epi)
                 {
-                    segData.T_M.push_back(nextpoint[i]);
+                    segData->T_M.push_back(nextpoint[i]);
                     hasOutlier=true;
                 }
-                segData.KeyPointNum++;
+                segData->KeyPointNum++;
                 break;
             }
         }

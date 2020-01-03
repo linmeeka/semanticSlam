@@ -109,9 +109,10 @@ PointCloudMapping::PointCloudMapping(double resolution_) {
     int max_obj_num = 100;
     int max_lost_num = 5;
     float match_thr = 0.35;
-    mObjectManager = ObjectManager(max_obj_num, max_lost_num, match_thr);
+    modelManager = ModelManager(max_obj_num, max_lost_num, match_thr);
 
 }
+
 void PointCloudMapping::shutdown()
 {
     {
@@ -123,33 +124,37 @@ void PointCloudMapping::shutdown()
 }
 
 
-void PointCloudMapping::insertKeyFrame(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask)
+void PointCloudMapping::insertKeyFrame(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask, std::vector<std::shared_ptr<SegData>> &segDatas)
 {
 
 
     cout<<"receive a keyframe, id = "<<kf->mnId<<endl;
 
     unique_lock<mutex> lck(keyframeMutex);
-    keyframes.push_back( kf );
-    colorImgs.push_back( color.clone());
-    depthImgs.push_back( depth.clone());
-    maskImgs.push_back(mask.clone());
+    // keyframes.push_back( kf );
+    // colorImgs.push_back( color.clone());
+    // depthImgs.push_back( depth.clone());
+    // maskImgs.push_back(mask.clone());
+    keyframes.push( kf );
+    colorImgs.push( color.clone());
+    depthImgs.push( depth.clone());
+    maskImgs.push(mask.clone());
+    segDataQue.push(segDatas);
     keyFrameUpdated.notify_one();
 }
 
-
-
-
-pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth)
+pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask)
 {
     PointCloud::Ptr tmp( new PointCloud() );
-    PointCloud::Ptr tmppre( new PointCloud() );
     // point cloud is null ptr
     // 3*3的像素区域取一个点
     for ( int m=0; m<depth.rows; m+=3 )
     {
         for ( int n=0; n<depth.cols; n+=3 )
         {
+            int val=mask.ptr<uchar>(m)[n];
+            if(val!=0)
+                continue;
             float d = depth.ptr<float>(m)[n];
             if (d < 0.01 || d>10)
                 continue;
@@ -157,29 +162,16 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
             p.z = d;
             p.x = ( n - kf->cx) * p.z / kf->fx;
             p.y = ( m - kf->cy) * p.z / kf->fy;
-
             p.b = color.ptr<uchar>(m)[n*3];
             p.g = color.ptr<uchar>(m)[n*3+1];
             p.r = color.ptr<uchar>(m)[n*3+2];
-
-            if(p.b==139)
-                tmppre->points.push_back(p);
-//            if(p.b == p.g || p.b == p.r)
-//                continue;
-
             tmp->points.push_back(p);
         }
     }
-
     Eigen::Isometry3d T = ORB_SLAM2::Converter::toSE3Quat( kf->GetPose() );
     PointCloud::Ptr cloud(new PointCloud);
     pcl::transformPointCloud( *tmp, *cloud, T.inverse().matrix());
     cloud->is_dense = false;
-
-
-    PointCloud::Ptr cloudpre(new PointCloud);
-    pcl::transformPointCloud( *tmppre, *cloudpre, T.inverse().matrix());
-    cloudpre->is_dense = false;
 
     cout<<"generate point cloud for kf "<<kf->mnId<<", size="<<cloud->points.size()<<endl;
     return cloud;
@@ -217,18 +209,28 @@ void PointCloudMapping::viewer()
 
 
         {
-
-            for (size_t i=lastKeyframeSize; i<N ; i++) {
+            for(int i=0;i<N;i++)
+            //for (size_t i=lastKeyframeSize; i<N ; i++) 
+            {
                 // 为每个KF生成点云
                 //PointCloud::Ptr surf_p = generatePointCloud(keyframes[i], img_tmp_color, depthImgs[i]);
-                
+                KeyFrame* kf=keyframes.front();
+                keyframes.pop();
+                cv::Mat colorImg=colorImgs.front();
+                colorImgs.pop();
+                cv::Mat depthImg=depthImgs.front();
+                depthImgs.pop();
+                cv::Mat maskImg=maskImgs.front();
+                maskImgs.pop();
+                std::vector<std::shared_ptr<SegData>> segDatas=segDataQue.front();
+                segDataQue.pop();
                 // 更新背景
-                PointCloud::Ptr surf_p = generatePointCloud(keyframes[i], colorImgs[i], depthImgs[i],maskImgs[i]);
+                PointCloud::Ptr surf_p = generatePointCloud(kf, colorImg, depthImg,maskImg);
                 *background += *surf_p;
                 *globalMap=*background;
                  // 在这里调用model maneger 更新model
-                modelManager.UpdateObjectInstances();
-                modelManager.UpdateObjectPointCloud(keyframes[i],colorImgs[i], depthImgs[i],maskImgs[i],globalMap);
+                modelManager.UpdateObjectInstances(kf,segDatas);
+                modelManager.UpdateObjectPointCloud(kf, colorImg, depthImg,maskImg,globalMap);
                 
                 //PointCloud::Ptr p = RegionGrowingSeg(surf_p);                
 

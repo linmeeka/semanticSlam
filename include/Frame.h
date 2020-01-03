@@ -18,6 +18,7 @@
 #include "ORBVocabulary.h"
 #include "KeyFrame.h"
 #include "ORBextractor.h"
+#include <memory>
 //#include "SegData.h"
 
 #include <opencv2/opencv.hpp>
@@ -49,7 +50,7 @@ public:
     Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
     
     // Constructor for RGB-D cameras.
-    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, const std::vector<cv::Rect> &imROIs, const std::vector<int> &imClassIds,const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, std::vector<std::shared_ptr<SegData>> &segDatas,const cv::Mat &imRGB, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
 
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const cv::Mat &mask, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
@@ -145,9 +146,8 @@ public:
     cv::Mat mImGray;
     cv::Mat mImRGB;
     cv::Mat mImMaskColor;
-    std::vector<cv::Rect> mImROIs;
     std::vector<std::vector<cv::Point2f>> T_Ms;
-    std::vector<SegData> mImSegData;
+    std::vector<std::shared_ptr<SegData>> mImSegData;
     // Previous Image
     // cv::Mat mImGrayPre;
     // std::vector<cv::Point2f> prepoint, nextpoint;

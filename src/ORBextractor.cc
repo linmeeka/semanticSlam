@@ -1147,18 +1147,18 @@ void ORBextractor::ComputePyramid(cv::Mat image)
 
 }
 
-bool ORBextractor::FilterMovingPoint(std::vector<SegData> &mImSegData, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT)
+bool ORBextractor::FilterMovingPoint(std::vector<std::shared_ptr<SegData>> &mImSegData, const cv::Mat &imMask,std::vector<std::vector<cv::KeyPoint>>& mvKeysT)
 {
     bool hasMoveObj=false;
     double rateTresh=0;
     for(auto &segData:mImSegData)
     {
-        int outLierNum=segData.T_M.size();
-        double rate=(double)(outLierNum)/(double)(segData.KeyPointNum);
+        int outLierNum=segData->T_M.size();
+        double rate=(double)(outLierNum)/(double)(segData->KeyPointNum);
         if(rate>rateTresh)
         {
             //segData.IsMove=true;
-            segData.setMoveTrue();
+            segData->setMoveTrue();
             hasMoveObj=true;
         }
     }
@@ -1186,13 +1186,13 @@ bool ORBextractor::FilterMovingPoint(std::vector<SegData> &mImSegData, const cv:
                     bool isErased=false;
                     for(auto segData:mImSegData)
                     {
-                        auto roi=segData.mImROI;
+                        auto roi=segData->mImROI;
                         int x1=roi.x;
                         int x2=roi.x+roi.width;
                         int y1=roi.y;
                         int y2=roi.y+roi.height;
                         int label_coord =(int)imMask.ptr<uchar>((int)search_coord.y)[(int)search_coord.x];
-                        if(segData.IsMove&&label_coord==segData.classId&&search_coord.x>x1&&search_coord.x<x2&&search_coord.y>y1&&search_coord.y<y2)
+                        if(segData->IsMove&&label_coord==segData->classId&&search_coord.x>x1&&search_coord.x<x2&&search_coord.y>y1&&search_coord.y<y2)
                         {
                             keypoint=mkeypoints.erase(keypoint);
                             isErased=true;

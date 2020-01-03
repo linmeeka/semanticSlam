@@ -19,12 +19,17 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <condition_variable>
+#include "Converter.h"
+
+typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointCloud;
 //using namespace std;
 using namespace ORB_SLAM2;
 
 class Model
 {
 public:
+    typedef pcl::PointXYZRGBA PointT;
     // explicit Model(const int index);
     explicit Model(const int index, const long unsigned int kf_index, const std::shared_ptr<SegData>& segData);
     // explicit Model(const int index,const std::shared_ptr<ImgObjectInfo>& pImgObjectInfo, \
@@ -55,20 +60,13 @@ public:
             return mmKeyFrameObjectInfo[mvKeyframeIndexes[mvKeyframeIndexes.size()-1]]->mImROI;
         }
     }
-    PointCloud::*Ptr getPointCloudModel()
-    {
-        return *model;
-    }
-    cv::Rect GetRoI()
-    {
-
-    }
     long unsigned int GetLastFrameID()
     {
         if(mvKeyframeIndexes.size()>0)
             return mvKeyframeIndexes[mvKeyframeIndexes.size()-1];
     }
-    void UpdatePointCloud(const KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask);
+    void UpdatePointCloud(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask);
+    PointCloud::Ptr model;
 
 private:
     int mIndex;
@@ -77,10 +75,10 @@ private:
     std::set<long unsigned  int>mvMapPointIndexes;
     std::unordered_map<long unsigned int,std::shared_ptr<SegData>> mmKeyFrameObjectInfo; //KFIndex -> Objs
     //std::unordered_map<long unsigned int,std::shared_ptr<ImgObjectInfo>> mmKeyFrameObjectInfo;
-    PointCloud::Ptr model;
+    
     int isMoving;
 
-    void GetIncrementModel(const KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask, PointCloud::Ptr &inc);
+    pcl::PointCloud<PointT >::Ptr GetIncrementModel(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask);
 };
 
 

@@ -18,10 +18,9 @@
 #include"Converter.h"
 #include"Map.h"
 #include"Initializer.h"
-
 #include"Optimizer.h"
 #include"PnPsolver.h"
-
+#include"SegData.h"
 #include<iostream>
 
 #include<mutex>
@@ -369,13 +368,14 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD,const cv
 }
 
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor,
-                                const std::vector<cv::Rect> &ROIs, const std::vector<int> &ClassIdRes, const double &timestamp, 
+                                std::vector<std::shared_ptr<SegData>> &segDatas, const double &timestamp, 
                                 cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut)
 {
     mImGray = imRGB;
     mImDepth=imD;
     mImMaskColor=maskColor;
     mImMask=mask;
+    mImSegDatas=segDatas;
     cv::Mat imMask = mask;
     cv::Mat _imRGB = imRGB.clone();
 
@@ -419,7 +419,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
 
     //mCurrentFrame = Frame(mImGray,imDepth,imMask,imRGBOut,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     //    imwrite("masktracking.jpg",mask);
-    mCurrentFrame = Frame(_mImGray,mImDepth,mask,mImMaskColor,ROIs,ClassIdRes,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(_mImGray,mImDepth,mask,mImMaskColor,segDatas,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
 
@@ -513,46 +513,6 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask, con
     return mCurrentFrame.mTcw.clone();
 
 }
-
-// cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const cv::Mat &mask, const cv::Mat &color, const double &timestamp)
-// {
-//     mImGray = im;
-//     cv::Mat imMask = mask;
-    
-//     if(mImGray.channels()==3)
-//     {
-//         if(mbRGB)
-//             cvtColor(mImGray,mImGray,CV_RGB2GRAY);
-//         else
-//             cvtColor(mImGray,mImGray,CV_BGR2GRAY);
-//     }
-//     else if(mImGray.channels()==4)
-//     {
-//         if(mbRGB)
-//             cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
-//         else
-//             cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
-//     }
-
-//     cv::Mat _mImGray = mImGray.clone();
-//     mImGray = mImGray*0;
-//     _mImGray.copyTo(mImGray,imMask);
-
-//     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-//     {
-//         //mCurrentFrame = Frame(mImGray,imMask,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-//         mCurrentFrame = Frame(mImGray,imMask,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,color);
-//     }
-//     else
-//         //mCurrentFrame = Frame(mImGray,imMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-//         mCurrentFrame = Frame(mImGray,imMask,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,color);
-
-
-//     Track();
-    
-//     return mCurrentFrame.mTcw.clone();
-
-// }
 
 void Tracking::Track()
 {
@@ -1594,7 +1554,7 @@ void Tracking::CreateNewKeyFrame()
 
     mpLocalMapper->SetNotStop(false);
 
-    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,);
+    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,this->mImSegDatas);
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;

@@ -15,21 +15,21 @@ void Model::UpdateObjectInfo(const std::shared_ptr<SegData>& segData, const long
     mvKeyframeIndexes.push_back(kf_index);
 }
 
-void Model::UpdatePointCloud(const KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask)
+void Model::UpdatePointCloud(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask)
 {
     PointCloud::Ptr inc;
-    GetIncrementModel(kf, color, depth, mask, inc);
+    inc = GetIncrementModel(kf, color, depth, mask);
     if(isMoving)
     {
-        this->model=inc;
+        *(this->model) = *inc;
     }
     else
     {
-        this->model += inc;
+        *(this->model) += *inc;
     }
 }
 
-void Model::GetIncrementModel(const KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask, PointCloud::Ptr &inc)
+pcl::PointCloud<PointT >::Ptr Model::GetIncrementModel(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask)
 {
     PointCloud::Ptr tmp( new PointCloud() );
     cv::Rect RoI=GetLastRect();
@@ -39,6 +39,8 @@ void Model::GetIncrementModel(const KeyFrame* kf, const cv::Mat& color, const cv
     {
         for ( int n=RoI.y; n<RoI.height; n+=3 )
         {
+            if(mask.ptr<uchar>(m)[n]!=mClassId)
+                continue;
             float d = depth.ptr<float>(m)[n];
             if (d < 0.01 || d>10)
                 continue;
@@ -46,14 +48,10 @@ void Model::GetIncrementModel(const KeyFrame* kf, const cv::Mat& color, const cv
             p.z = d;
             p.x = ( n - kf->cx) * p.z / kf->fx;
             p.y = ( m - kf->cy) * p.z / kf->fy;
-
             p.b = color.ptr<uchar>(m)[n*3];
             p.g = color.ptr<uchar>(m)[n*3+1];
             p.r = color.ptr<uchar>(m)[n*3+2];
-
-
-            if(mask.ptr<uchar>(m)[n]==mClassId)
-               tmp->points.push_back(p);
+            tmp->points.push_back(p);
         }
     }
 
