@@ -7,6 +7,7 @@ Model::Model(const int index, const long unsigned int kf_index, const std::share
     mmKeyFrameObjectInfo.insert(std::make_pair(kf_index,segData));
     mClassId = segData->classId;
     isMoving=segData->IsMove;
+    model = boost::make_shared<PointCloud>();
 }
 
 void Model::UpdateObjectInfo(const std::shared_ptr<SegData>& segData, const long unsigned int kf_index)

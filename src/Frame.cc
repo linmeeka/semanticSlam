@@ -386,21 +386,27 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     if(mvKeysTemp.empty())
         return;
 
-    // 运动物体检测
-    cv::Mat imGrayTemp=imGray.clone();
-    flagMoveSemantic=MovingCheckBySemantic();
-    if(flagMoveSemantic&&mImGrayPre.data)
-    {
-        flagMovePolar=MovingCheckByPolar();
-    }
-    else
-    {
-        flagMovePolar=false;
-    }
-    std::swap(mImGrayPre,imGrayTemp);
+    bool enableMovingCheck=false;
 
-    if(flagMovePolar&&flagMoveSemantic)
-        mpORBextractorLeft->FilterMovingPoint(mImSegData,mImMask,mvKeysTemp);
+    // 运动物体检测
+    if(enableMovingCheck)
+    {
+        cout<<"=====debug=====: enableMovingCheck"<<endl;
+        cv::Mat imGrayTemp=imGray.clone();
+        flagMoveSemantic=MovingCheckBySemantic();
+        if(flagMoveSemantic&&mImGrayPre.data)
+        {
+            flagMovePolar=MovingCheckByPolar();
+        }
+        else
+        {
+            flagMovePolar=false;
+        }
+        std::swap(mImGrayPre,imGrayTemp);
+
+        if(flagMovePolar&&flagMoveSemantic)
+            mpORBextractorLeft->FilterMovingPoint(mImSegData,mImMask,mvKeysTemp);
+    }
 
     ExtractORBDesp(0,imGray);
     N = mvKeys.size();

@@ -105,6 +105,7 @@ PointCloudMapping::PointCloudMapping(double resolution_) {
     this->resolution = resolution_;
     voxel.setLeafSize(resolution, resolution, resolution);
     globalMap = boost::make_shared<PointCloud>();
+    background = boost::make_shared<PointCloud>();
     viewerThread = make_shared<thread>(bind(&PointCloudMapping::viewer, this));
     int max_obj_num = 100;
     int max_lost_num = 5;
@@ -179,7 +180,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
 
 void PointCloudMapping::viewer()
 {
- //   return ;
+    return ;
     std::cout<<"enter viewer "<<std::endl;
     sleep(3);
     pcl::visualization::CloudViewer viewer("viewer");
@@ -224,14 +225,17 @@ void PointCloudMapping::viewer()
                 maskImgs.pop();
                 std::vector<std::shared_ptr<SegData>> segDatas=segDataQue.front();
                 segDataQue.pop();
+                //cout<<"=====debug=====: get kf from queue"<<endl;
                 // 更新背景
                 PointCloud::Ptr surf_p = generatePointCloud(kf, colorImg, depthImg,maskImg);
                 *background += *surf_p;
                 *globalMap=*background;
+                //cout<<"=====debug=====: update background "<<endl;
                  // 在这里调用model maneger 更新model
                 modelManager.UpdateObjectInstances(kf,segDatas);
+                //cout<<"=====debug=====: update instance"<<endl;
                 modelManager.UpdateObjectPointCloud(kf, colorImg, depthImg,maskImg,globalMap);
-                
+                //cout<<"=====debug=====: update moving object"<<endl;
                 //PointCloud::Ptr p = RegionGrowingSeg(surf_p);                
 
             }

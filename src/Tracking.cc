@@ -399,36 +399,31 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
     //_mImGray.copyTo(mImGray,imMask);
     imMask.copyTo(mImGray,imMask);
 
-   // cout<<"test start"<<endl;
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || mImDepth.type()!=CV_32F)
         mImDepth.convertTo(mImDepth,CV_32F,mDepthMapFactor);
 
-
-    //mCurrentFrame = Frame(mImGray,imDepth,imMask,_imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-
-    //LightTrack();
-
-    //imRGBOut = _imRGB;
-
-
-
-    //if (!mCurrentFrame.mTcw.empty())
-    //{
-    //    mGeometry.GeometricModelCorrection(mCurrentFrame,imDepth,imMask);
-    //}
-
-    //mCurrentFrame = Frame(mImGray,imDepth,imMask,imRGBOut,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-    //    imwrite("masktracking.jpg",mask);
+    #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    #else
+            std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
+    #endif
     mCurrentFrame = Frame(_mImGray,mImDepth,mask,mImMaskColor,segDatas,imRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-
+    //cout<<"=====debug=====: finish frame constract"<<endl;
+    #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+    #else
+            std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+    #endif
     Track();
+    #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+    #else
+            std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
+    #endif
 
-    //if (!mCurrentFrame.mTcw.empty())
-    //{
-    //    mGeometry.InpaintFrames(mCurrentFrame, mImGray, imDepth, imRGBOut, imMask);
-    //}
-
-    //mGeometry.GeometricModelUpdateDB(mCurrentFrame);
+    double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+    double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
+    cout<<"frame: "<<ttrack1<<" tracking: "<<ttrack2<<endl;
 
     imDOut = mImDepth;
     mImDepth.convertTo(imDOut,CV_16U,1./mDepthMapFactor);
@@ -545,6 +540,11 @@ void Tracking::Track()
     }
     else
     {
+        #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+        #else
+            std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
+        #endif
         // System is initialized. Track Frame.
         bool bOK;
 
@@ -646,7 +646,11 @@ void Tracking::Track()
                 }
             }
         }
-
+        #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        #else
+            std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+        #endif
         mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
         // If we have an initial estimation of the camera pose and matching. Track the local map.
@@ -663,7 +667,11 @@ void Tracking::Track()
             if(bOK && !mbVO)
                 bOK = TrackLocalMap();
         }
-
+        #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+        #else
+            std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
+        #endif
         if(bOK)
             mState = OK;
         else
@@ -738,6 +746,15 @@ void Tracking::Track()
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
         mLastFrame = Frame(mCurrentFrame);
+        #ifdef COMPILEDWITHC11
+            std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+        #else
+            std::chrono::monotonic_clock::time_point t4 = std::chrono::monotonic_clock::now();
+        #endif       
+        double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+        double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
+        double ttrack3= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
+        cout<<"tracking1: "<<ttrack1<<" tracking2: "<<ttrack2<<" tracking3: "<<ttrack3<<endl;
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -1555,7 +1572,7 @@ void Tracking::CreateNewKeyFrame()
     mpLocalMapper->SetNotStop(false);
 
     mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,this->mImSegDatas);
-
+    cout<<"=====debug=====: insert kf to point cloud"<<endl;
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
 }

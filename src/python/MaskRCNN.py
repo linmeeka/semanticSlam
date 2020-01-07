@@ -15,6 +15,7 @@ import model as modellib
 current_segmentation = None
 current_class_ids = None
 current_bounding_boxes = None
+current_score=None
 
 class Mask:
     """
@@ -112,6 +113,7 @@ class Mask:
 	id_image = np.zeros([h,w], np.uint8)
         exported_class_ids = []
         exported_rois = []
+	exported_scores= []
 	print "class_ids:"
 	print class_ids
 	for m in range(n):
@@ -132,14 +134,19 @@ class Mask:
                     #exported_class_ids.append(int(class_id))
                     exported_class_ids.append(val)
                     exported_rois.append(rois[m,:].tolist())
+		    exported_scores.append(scores[m])
+		    print type(scores[m])
+		    print scores[m]
         global current_segmentation
         global current_class_ids
         global current_bounding_boxes
+	global current_score
         current_segmentation=id_image
         current_class_ids=exported_class_ids
+	current_score=exported_scores
 	print exported_class_ids
         current_bounding_boxes=exported_rois
-        return id_image, exported_class_ids, exported_rois
+        return id_image, exported_class_ids, exported_rois, current_score
 
 
     def GetDynSeg(self,image,image2=None):

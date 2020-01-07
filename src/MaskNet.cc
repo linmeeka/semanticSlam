@@ -82,7 +82,7 @@ SegmentDynObject::~SegmentDynObject(){
 //     return seg;
 // }
 
-void SegmentDynObject::SaveResult(const cv::Mat &maskRes, const std::vector<cv::Rect> &ROIRes, const std::vector<int> &ClassIdRes, std::string dir, std::string name)
+void SegmentDynObject::SaveResult(const cv::Mat &maskRes, const std::vector<cv::Rect> &ROIRes, const std::vector<int> &ClassIdRes,  const std::vector<double> &ScoreRes, std::string dir, std::string name)
 {
     std::string dirMask=dir+"/mask";
     if(dir.compare("no_save")!=0){
@@ -156,9 +156,41 @@ void SegmentDynObject::SaveResult(const cv::Mat &maskRes, const std::vector<cv::
         }
         outfile.close();
     }
+
+    std::string dirObj=dir+"/obj";
+    if(dir.compare("no_save")!=0){
+        DIR* _dir = opendir(dirObj.c_str());
+        if (_dir) {closedir(_dir);}
+        else if (ENOENT == errno)
+        {
+            const int check = mkdir(dirObj.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if (check == -1) {
+                std::string str = dirObj;
+                str.replace(str.end() - 6, str.end(), "");
+                mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            }
+        }
+        
+        std::ofstream outfile(dirObj+"/"+name+".txt",std::ios::trunc);
+        if(!outfile.is_open())
+        {
+            std::cout<<"can not open file:"<<dirObj<<"/"<<name<<".txt"<<std::endl;
+        }
+        else
+        {
+            for(int i=0;i<ClassIdRes.size();i++)
+            {
+                auto roi=ROIRes[i];
+                auto id=ClassIdRes[i];
+                auto score=ScoreRes[i];
+                outfile<<roi.x<<" "<<roi.y<<" "<<roi.width<<" "<<roi.height<<" "<<id<<" "<<score<<std::endl;
+            }
+        }
+        outfile.close();
+    }
 }
 
-void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::string dir, std::string name)
+void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::vector<double> &ScoreRes, std::string dir, std::string name)
 {
     std::string nameROI=dir+"/roi/"+name+".txt";
     std::ifstream ROIfile(nameROI);
@@ -204,7 +236,48 @@ void SegmentDynObject::ReadResult(std::vector<cv::Rect> &ROIRes, std::vector<int
     {
         std::cout<<"can not open file:"<<nameClassId<<std::endl;
     }
+
 }
+
+void SegmentDynObject::ReadResultOneFile(std::vector<cv::Rect> &ROIRes, 
+    std::vector<int> &ClassIdRes, std::vector<double> &ScoreRes, std::string dir, std::string name)
+{
+    std::string nameObj=dir+"/obj/"+name+".txt";
+    std::ifstream Objfile(nameObj);
+    if(Objfile)
+    {
+        std::string line_info,input_result;
+        std::vector<int> vectorString;
+        int id;
+        double score;
+        while (getline (Objfile, line_info)) // line中不包括每行的换行符
+        {
+            vectorString.clear();
+            std::stringstream input(line_info);
+            //依次输出到input_result中，并存入vectorString中
+           // std::cout<<"roi line_info: "<<line_info<<std::endl;
+            for(int i=0;i<4;i++)
+            {
+                input>>input_result;
+                vectorString.push_back(std::stoi(input_result));
+                //std::cout<<input_result<<" ";
+            }
+            input>>input_result;
+            id=std::stoi(input_result);
+            input>>input_result;
+            score=std::stod(input_result);
+            //std::cout<<std::endl;
+            ROIRes.push_back(cv::Rect(vectorString[0],vectorString[1],vectorString[2],vectorString[3]));
+            ClassIdRes.push_back(id);
+            ScoreRes.push_back(score);
+        }
+    }
+    else
+    {
+        std::cout<<"can not open file:"<<nameObj<<std::endl;
+    }
+}
+
 
 cv::Mat SegmentDynObject::GetMaskResult(std::string dir, std::string name)
 {
@@ -284,7 +357,26 @@ std::vector<int> SegmentDynObject::GetClassResult(){
     return result;
 }
 
-void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::string dir, std::string name){
+std::vector<double> SegmentDynObject::GetScoreesult(){
+    std::vector<double> result;
+    assert(result.size() == 0);
+    PyObject* pClassList = PyObject_GetAttrString(this->py_module,"current_score");
+    if(!PySequence_Check(pClassList)) throw std::runtime_error("pClassList is not a sequence.");
+    Py_ssize_t n = PySequence_Length(pClassList);
+    result.reserve(n);
+    //result.reserve(n+1);
+    //result.push_back(0); // Background
+    for (int i = 0; i < n; ++i) {
+        PyObject* o = PySequence_GetItem(pClassList, i);
+        //assert(PyLong_Check(o));
+        result.push_back(PyFloat_AsDouble(o));
+        Py_DECREF(o);
+    }
+    Py_DECREF(pClassList);
+    return result;
+}
+
+void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::vector<double> &ScoreRes, std::string dir, std::string name){
     std::string nameMask=dir+"/mask/"+name+".png";
     maskRes = cv::imread(nameMask,CV_LOAD_IMAGE_UNCHANGED);
     //maskRes = cv::imread(dir+"/"+name,CV_LOAD_IMAGE_UNCHANGED);
@@ -296,8 +388,9 @@ void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::ve
         maskRes=GetMaskResult(dir,name);
         ROIRes=GetROIResult();
         ClassIdRes=GetClassResult();
+        ScoreRes=GetScoreesult();
         std::cout<<"get res finish"<<std::endl;
-        SaveResult(maskRes,ROIRes,ClassIdRes,dir,name);
+        SaveResult(maskRes,ROIRes,ClassIdRes,ScoreRes,dir,name);
         std::cout<<"save finish"<<std::endl;
         // for(auto rect:ROIRes)
         // {
@@ -306,7 +399,8 @@ void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::ve
     }
     else
     {
-        ReadResult(ROIRes,ClassIdRes,dir,name);
+        //ReadResult(ROIRes,ClassIdRes,ScoreRes,dir,name);
+        ReadResultOneFile(ROIRes,ClassIdRes,ScoreRes,dir,name);
     }
     
 }
