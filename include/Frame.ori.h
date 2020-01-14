@@ -142,8 +142,7 @@ public:
     // Depth Image (Included by Berta).
     cv::Mat mImDepth;
     bool mIsKeyFrame;
-    cv::Mat mImGray;
-    cv::Mat mImRGB;
+
     double limit_dis_epi =0.1; 
     double limit_of_check = 2120;
     int limit_edge_corner = 5;

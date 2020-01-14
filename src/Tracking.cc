@@ -423,7 +423,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
 
     double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
     double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
-    cout<<"frame: "<<ttrack1<<" tracking: "<<ttrack2<<endl;
+    //cout<<"frame: "<<ttrack1<<" tracking: "<<ttrack2<<endl;
 
     imDOut = mImDepth;
     mImDepth.convertTo(imDOut,CV_16U,1./mDepthMapFactor);
@@ -653,7 +653,7 @@ void Tracking::Track()
         #endif
         mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
-        // If we have an initial estimation of the camera pose and matching. Track the local map.
+        //If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
         {
             if(bOK)
@@ -754,7 +754,7 @@ void Tracking::Track()
         double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
         double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
         double ttrack3= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
-        cout<<"tracking1: "<<ttrack1<<" tracking2: "<<ttrack2<<" tracking3: "<<ttrack3<<endl;
+        //cout<<"tracking1: "<<ttrack1<<" tracking2: "<<ttrack2<<" tracking3: "<<ttrack3<<endl;
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -1368,13 +1368,20 @@ bool Tracking::TrackLocalMap()
     // We retrieve the local map and try to find matches to points in the local map.
 
     UpdateLocalMap();
-
     SearchLocalPoints();
-
+#ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+#else
+        std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
+#endif
     // Optimize Pose
     Optimizer::PoseOptimization(&mCurrentFrame);
     mnMatchesInliers = 0;
-
+#ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+#else
+        std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+#endif
     // Update MapPoints Statistics
     for(int i=0; i<mCurrentFrame.N; i++)
     {
@@ -1396,7 +1403,15 @@ bool Tracking::TrackLocalMap()
 
         }
     }
+#ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+#else
+        std::chrono::monotonic_clock::time_point t4 = std::chrono::monotonic_clock::now();
+#endif
 
+    double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t3).count();
+    double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t2).count();
+    //cout<<"local map1: "<<ttrack1<<" local map 2: "<<ttrack2<<endl;
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)

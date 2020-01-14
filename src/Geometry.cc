@@ -431,17 +431,17 @@ cv::Mat Geometry::DepthRegionGrowing(const vector<DynKeyPoint> &vDynPoints,const
 
 void Geometry::CombineMasks(const ORB_SLAM2::Frame &currentFrame, cv::Mat &mask)
 {
-    cv::Mat _maskL = cv::Mat::ones(currentFrame.mImMask.size(),currentFrame.mImMask.type());
-    _maskL = _maskL - currentFrame.mImMask;
+    // cv::Mat _maskL = cv::Mat::ones(currentFrame.mImMask.size(),currentFrame.mImMask.type());
+    // _maskL = _maskL - currentFrame.mImMask;
 
-    cv::Mat _maskG = cv::Mat::ones(mask.size(),mask.type());
-    _maskG = _maskG - mask;
+    // cv::Mat _maskG = cv::Mat::ones(mask.size(),mask.type());
+    // _maskG = _maskG - mask;
 
-    cv::Mat _mask = _maskL | _maskG;
+    // cv::Mat _mask = _maskL | _maskG;
 
-    cv::Mat __mask = cv::Mat::ones(_mask.size(),_mask.type());
-    __mask = __mask - _mask;
-    mask = __mask;
+    // cv::Mat __mask = cv::Mat::ones(_mask.size(),_mask.type());
+    // __mask = __mask - _mask;
+    // mask = __mask;
 
 }
 
@@ -480,7 +480,8 @@ void Geometry::FillRGBD(const ORB_SLAM2::Frame &currentFrame,cv::Mat &mask,cv::M
         for (int j(0); j < 640*480; j++){
             int x = (int)vAllPixels.at<float>(j,0);
             int y = (int)vAllPixels.at<float>(j,1);
-            if ((int)refFrame.mImMask.at<uchar>(y,x) == 1){
+           // if ((int)refFrame.mImMask.at<uchar>(y,x) == 1)
+            {
                 const float d = refFrame.mImDepth.at<float>(y,x);
                 if (d > 0 && d < 7){
                     vPixels.at<float>(n,0) = vAllPixels.at<float>(j,0);
@@ -698,7 +699,8 @@ void Geometry::FillRGBD(const ORB_SLAM2::Frame &currentFrame,cv::Mat &mask,cv::M
         for (int j(0); j < 640*480; j++){
             int x = (int)vAllPixels.at<float>(j,0);
             int y = (int)vAllPixels.at<float>(j,1);
-            if ((int)refFrame.mImMask.at<uchar>(y,x) == 1){
+            //if ((int)refFrame.mImMask.at<uchar>(y,x) == 1)
+            {
                 const float d = refFrame.mImDepth.at<float>(y,x);
                 if (d > 0){
                     vPixels.at<float>(n,0) = vAllPixels.at<float>(j,0);

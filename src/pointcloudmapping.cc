@@ -97,9 +97,6 @@ int k = 500;
 int min_size = 500;
 
 
-
-
-
 PointCloudMapping::PointCloudMapping(double resolution_) {
 
     this->resolution = resolution_;
@@ -109,8 +106,8 @@ PointCloudMapping::PointCloudMapping(double resolution_) {
     viewerThread = make_shared<thread>(bind(&PointCloudMapping::viewer, this));
     int max_obj_num = 100;
     int max_lost_num = 5;
-    float match_thr = 0.35;
-    modelManager = ModelManager(max_obj_num, max_lost_num, match_thr);
+    //float match_thr = 0.95;
+    modelManager = ModelManager(max_obj_num, max_lost_num);
 
 }
 
@@ -180,7 +177,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
 
 void PointCloudMapping::viewer()
 {
-    return ;
+    //return ;
     std::cout<<"enter viewer "<<std::endl;
     sleep(3);
     pcl::visualization::CloudViewer viewer("viewer");
@@ -232,8 +229,9 @@ void PointCloudMapping::viewer()
                 *globalMap=*background;
                 //cout<<"=====debug=====: update background "<<endl;
                  // 在这里调用model maneger 更新model
-                modelManager.UpdateObjectInstances(kf,segDatas);
+                modelManager.UpdateObjectInstances(kf,segDatas,maskImg);
                 //cout<<"=====debug=====: update instance"<<endl;
+                cout<<" segData size: "<<segDatas.size()<<endl;
                 modelManager.UpdateObjectPointCloud(kf, colorImg, depthImg,maskImg,globalMap);
                 //cout<<"=====debug=====: update moving object"<<endl;
                 //PointCloud::Ptr p = RegionGrowingSeg(surf_p);                
@@ -251,32 +249,4 @@ void PointCloudMapping::viewer()
     // pcdwriter.write<pcl::PointXYZRGBA>("global_color.pcd", *globalMap);//write global point cloud map and save to a pcd file
     // cpf_seg(globalMap);
    
-}
-
-
-void PointCloudMapping::cpf_seg(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr input_cloud_ptr)
-{
-    APC::Segmentation seg;
-    APC::Config config;
-    config.noise_threshold = 0.01; // 1cm
-    config.voxel_resolution = 0.008f;// 0.8cm
-    config.seed_resolution = 0.08f; // 8cm
-    config.min_plane_area = 0.01f; // m^2;
-    config.max_curvature = 0.01;
-    seg.setConfig(config);
-    pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
-    pcl::VoxelGrid<PointT> sor;
-    
-    sor.setInputCloud(input_cloud_ptr);
-    sor.setLeafSize (0.005f, 0.005f, 0.005f);
-    sor.filter(*cloud_filtered);
-    std::cerr << "Number of points after filtered " << cloud_filtered->size() << std::endl;
-    seg.setPointCloud(input_cloud_ptr);
-    
-    // seg.doSegmentation();
-    // pcl::PointCloud<pcl::PointXYZL>::Ptr segmented_cloud_ptr;
-    // segmented_cloud_ptr = seg.getSegmentedPointCloud();
-    // bool save_binary_pcd = false;
-    // pcl::io::savePCDFile ("segmentation.pcd", *segmented_cloud_ptr, save_binary_pcd);
-    // cout <<"finish segmentation,please see details in segmentation.pcd"<<endl;
 }

@@ -100,62 +100,62 @@ void SegmentDynObject::SaveResult(const cv::Mat &maskRes, const std::vector<cv::
         cv::imwrite(dirMask+"/"+name+".png",maskRes);
     }
 
-    std::string dirROI=dir+"/roi";
-    if(dir.compare("no_save")!=0){
-        DIR* _dir = opendir(dirROI.c_str());
-        if (_dir) {closedir(_dir);}
-        else if (ENOENT == errno)
-        {
-            const int check = mkdir(dirROI.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            if (check == -1) {
-                std::string str = dirROI;
-                str.replace(str.end() - 6, str.end(), "");
-                mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            }
-        }
+    // std::string dirROI=dir+"/roi";
+    // if(dir.compare("no_save")!=0){
+    //     DIR* _dir = opendir(dirROI.c_str());
+    //     if (_dir) {closedir(_dir);}
+    //     else if (ENOENT == errno)
+    //     {
+    //         const int check = mkdir(dirROI.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         if (check == -1) {
+    //             std::string str = dirROI;
+    //             str.replace(str.end() - 6, str.end(), "");
+    //             mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         }
+    //     }
         
-        std::ofstream outfile(dirROI+"/"+name+".txt",std::ios::trunc);
-        if(!outfile.is_open())
-        {
-            std::cout<<"can not open file:"<<dirROI<<"/"<<name<<".txt"<<std::endl;
-        }
-        else
-        {
-            for(auto roi : ROIRes)
-            {
-                outfile<<roi.x<<" "<<roi.y<<" "<<roi.width<<" "<<roi.height<<std::endl;
-            }
-        }
-        outfile.close();
-    }
+    //     std::ofstream outfile(dirROI+"/"+name+".txt",std::ios::trunc);
+    //     if(!outfile.is_open())
+    //     {
+    //         std::cout<<"can not open file:"<<dirROI<<"/"<<name<<".txt"<<std::endl;
+    //     }
+    //     else
+    //     {
+    //         for(auto roi : ROIRes)
+    //         {
+    //             outfile<<roi.x<<" "<<roi.y<<" "<<roi.width<<" "<<roi.height<<std::endl;
+    //         }
+    //     }
+    //     outfile.close();
+    // }
 
-    std::string dirClassId=dir+"/classid";
-    if(dir.compare("no_save")!=0){
-        DIR* _dir = opendir(dirClassId.c_str());
-        if (_dir) {closedir(_dir);}
-        else if (ENOENT == errno)
-        {
-            const int check = mkdir(dirClassId.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            if (check == -1) {
-                std::string str = dirClassId;
-                str.replace(str.end() - 6, str.end(), "");
-                mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            }
-        }
-        std::ofstream outfile(dirClassId+"/"+name+".txt", std::ios::trunc);
-        if(!outfile.is_open())
-        {
-            std::cout<<"can not open file:"<<dirClassId<<"/"<<name<<".txt"<<std::endl;
-        }
-        else
-        {
-            for(auto id : ClassIdRes)
-            {
-                outfile<<id<<std::endl;
-            }
-        }
-        outfile.close();
-    }
+    // std::string dirClassId=dir+"/classid";
+    // if(dir.compare("no_save")!=0){
+    //     DIR* _dir = opendir(dirClassId.c_str());
+    //     if (_dir) {closedir(_dir);}
+    //     else if (ENOENT == errno)
+    //     {
+    //         const int check = mkdir(dirClassId.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         if (check == -1) {
+    //             std::string str = dirClassId;
+    //             str.replace(str.end() - 6, str.end(), "");
+    //             mkdir(str.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //         }
+    //     }
+    //     std::ofstream outfile(dirClassId+"/"+name+".txt", std::ios::trunc);
+    //     if(!outfile.is_open())
+    //     {
+    //         std::cout<<"can not open file:"<<dirClassId<<"/"<<name<<".txt"<<std::endl;
+    //     }
+    //     else
+    //     {
+    //         for(auto id : ClassIdRes)
+    //         {
+    //             outfile<<id<<std::endl;
+    //         }
+    //     }
+    //     outfile.close();
+    // }
 
     std::string dirObj=dir+"/obj";
     if(dir.compare("no_save")!=0){

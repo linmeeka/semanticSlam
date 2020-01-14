@@ -78,8 +78,6 @@ public:
     void shutdown();
     void viewer();
 
-    void cpf_seg(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr incloud);
-
     
 protected:
     PointCloud::Ptr generatePointCloud(KeyFrame* kf, cv::Mat& color, cv::Mat& depth, cv::Mat& mask);

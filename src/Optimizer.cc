@@ -238,6 +238,11 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
 int Optimizer::PoseOptimization(Frame *pFrame)
 {
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
+    #endif
     g2o::SparseOptimizer optimizer;
     g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
 
@@ -259,7 +264,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
     // Set MapPoint vertices
     const int N = pFrame->N;
-
+    //cout<<"=====debug===== : frame key poitns: "<< N<<endl;
     vector<g2o::EdgeSE3ProjectXYZOnlyPose*> vpEdgesMono;
     vector<size_t> vnIndexEdgeMono;
     vpEdgesMono.reserve(N);
@@ -360,7 +365,11 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     }
     }
 
-
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+    #endif
     if(nInitialCorrespondences<3)
         return 0;
 
@@ -446,7 +455,14 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     cv::Mat pose = Converter::toCvMat(SE3quat_recov);
     pFrame->SetPose(pose);
-
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
+    #endif
+    double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+    double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
+    //cout<<"optimize 1: "<<ttrack1<<" optimize 2: "<<ttrack2<<endl;
     return nInitialCorrespondences-nBad;
 }
 

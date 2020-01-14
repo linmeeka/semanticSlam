@@ -31,14 +31,14 @@ class Model
 public:
     typedef pcl::PointXYZRGBA PointT;
     // explicit Model(const int index);
-    explicit Model(const int index, const long unsigned int kf_index, const std::shared_ptr<SegData>& segData);
+    explicit Model(const int index, const long unsigned int kf_index, const std::shared_ptr<SegData>& segData,const cv::Mat &Mask);
     // explicit Model(const int index,const std::shared_ptr<ImgObjectInfo>& pImgObjectInfo, \
     // const long unsigned int kf_index,const std::vector<MapPoint*>& pvMapPoints);
 
     // void UpdateObjectInfo(const std::shared_ptr<ImgObjectInfo>& pImgObjectInfo, \
     // const long unsigned int kf_index,const std::vector<MapPoint*>&pvMapPoints);
 
-    void UpdateObjectInfo(const std::shared_ptr<SegData>& segData, const long unsigned int kf_index);
+    void UpdateObjectInfo(const std::shared_ptr<SegData>& segData, const long unsigned int kf_index, const cv::Mat &Mask);
     //void UpdateObjectInfo()
 
     //Model();
@@ -60,13 +60,20 @@ public:
             return mmKeyFrameObjectInfo[mvKeyframeIndexes[mvKeyframeIndexes.size()-1]]->mImROI;
         }
     }
+    cv::Mat GetLastMask()
+    {
+        return lastMask;
+    }
     long unsigned int GetLastFrameID()
     {
         if(mvKeyframeIndexes.size()>0)
-            return mvKeyframeIndexes[mvKeyframeIndexes.size()-1];
+            //return mvKeyframeIndexes[mvKeyframeIndexes.size()-1];
+            return mvKeyframeIndexes.back();
     }
-    void UpdatePointCloud(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask);
+    void UpdatePointCloud(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, cv::Mat& mask);
     PointCloud::Ptr model;
+    bool matched;
+    int isMoving;
 
 private:
     int mIndex;
@@ -75,10 +82,10 @@ private:
     std::set<long unsigned  int>mvMapPointIndexes;
     std::unordered_map<long unsigned int,std::shared_ptr<SegData>> mmKeyFrameObjectInfo; //KFIndex -> Objs
     //std::unordered_map<long unsigned int,std::shared_ptr<ImgObjectInfo>> mmKeyFrameObjectInfo;
+    cv::Mat lastMask;
     
-    int isMoving;
-
-    pcl::PointCloud<PointT >::Ptr GetIncrementModel(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, const cv::Mat& mask);
+ 
+    pcl::PointCloud<PointT >::Ptr GetIncrementModel(KeyFrame* kf, const cv::Mat& color, const cv::Mat& depth, cv::Mat& mask);
 };
 
 

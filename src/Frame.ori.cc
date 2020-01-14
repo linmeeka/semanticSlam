@@ -32,7 +32,10 @@ std::vector<float> err;
 std::vector<std::vector<cv::KeyPoint>> mvKeysPre;
 
 cv::Mat mImMask;
+cv::Mat mImGray;
+cv::Mat mImRGB;
 cv::Mat mImMaskColor;
+std::vector<std::vector<cv::Point2f>> T_Ms;
 std::vector<std::shared_ptr<SegData>> mImSegData;
 // std::vector<float> labelWeight={
 //         /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
@@ -46,17 +49,17 @@ std::vector<std::shared_ptr<SegData>> mImSegData;
 //         /*70*/    0.0   
 //             };
 
-// std::vector<float> labelWeight={
-//         /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*10*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*20*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*30*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*40*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*60*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*70*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-//         /*70*/    0.0   
-//             };
+std::vector<float> labelWeight={
+        /*0 */    0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*10*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*20*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*30*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*40*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*50*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*60*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*70*/    0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+        /*70*/    0.0   
+            };
 
 
 Frame::Frame()
@@ -73,7 +76,7 @@ Frame::Frame(const Frame &frame)
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels), mImRGB(frame.mImRGB),
      mfScaleFactor(frame.mfScaleFactor), mfLogScaleFactor(frame.mfLogScaleFactor), mImGray(frame.mImGray),
-     mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
+     mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),mImMask(frame.mImMask),
      mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2),mIsKeyFrame(frame.mIsKeyFrame),mImDepth(frame.mImDepth)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
@@ -191,7 +194,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const cv::Mat &maskL
 
 Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    :mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
+    :mImMask(imMask), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth)
 {
     // Frame ID
@@ -274,7 +277,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imRGB,
              const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    :mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
+    :mImMask(imMask), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth), mImRGB(imRGB)
 {
     // Frame ID
@@ -358,15 +361,11 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
 Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMask, const cv::Mat &imMaskColor, std::vector<std::shared_ptr<SegData>> &segDatas, 
             const cv::Mat &imRGB, const double &timeStamp,  ORBextractor* extractor, ORBVocabulary* voc,
              cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    : mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
+    :mImMask(imMask),mImMaskColor(imMaskColor), mImSegData(segDatas), mpORBvocabulary(voc), mpORBextractorLeft(extractor), mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mImGray(imGray),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mIsKeyFrame(false), mImDepth(imDepth), mImRGB(imRGB)
 {
     // Frame ID
     mnId=nNextId++;
-    
-    mImMask=imMask;
-    mImMaskColor=imMaskColor;
-    mImSegData=segDatas;
 
     // Scale Level Info
     mnScaleLevels = mpORBextractorLeft->GetLevels();
@@ -386,9 +385,9 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     // Delete those ORB points that fall in Mask borders (Included by Berta)
     cv::Mat Mask_dil = imMask.clone();
     int dilation_size = 15;
-    // cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
-    //                                     cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-    //                                     cv::Point( dilation_size, dilation_size ) );
+    cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
+                                        cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
+                                        cv::Point( dilation_size, dilation_size ) );
     //cv::erode(imMask, Mask_dil, kernel);
     //mImMask=Mask_dil;
     if(mvKeysTemp.empty())
@@ -542,6 +541,7 @@ bool Frame::MovingCheckByPolar()
 	F_nextpoint.clear();
 	F2_prepoint.clear();
 	F2_nextpoint.clear();
+	T_M.clear();
 
 	// Detect dynamic target and ultimately optput the T matrix
 	
@@ -620,9 +620,6 @@ bool Frame::MovingCheckByPolar()
             continue;
         for(auto &segData : mImSegData)
         {
-            float weight=segData->weight;
-            if(weight==0)
-                continue;
             auto roi=segData->mImROI;
             int x1=roi.x;
             int x2=roi.x+roi.width;
@@ -630,7 +627,7 @@ bool Frame::MovingCheckByPolar()
             int y2=roi.y+roi.height;
             int x=nextpoint[i].x;
             int y=nextpoint[i].y;
-            
+            float weight=segData->weight;
             if(x>x1&&x<x2&&y>y1&&y<y2)
             {
                 int val=(int)mImMask.ptr<uchar>(x)[y];
@@ -673,16 +670,7 @@ bool Frame::MovingCheckBySemantic()
         return false;
     else
     {
-        bool flag=false;
-        for(auto segData:mImSegData)
-        {
-           if(segData->weight!=0)
-            {
-                flag=true;
-                break;
-            }
-        }
-        return flag;
+        return true;
     }
     
     // for(auto &segData : mImSegData)
