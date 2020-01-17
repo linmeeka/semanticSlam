@@ -423,7 +423,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
 
     double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
     double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
-    //cout<<"frame: "<<ttrack1<<" tracking: "<<ttrack2<<endl;
+   // cout<<"frame: "<<ttrack1<<" tracking: "<<ttrack2<<endl;
 
     imDOut = mImDepth;
     mImDepth.convertTo(imDOut,CV_16U,1./mDepthMapFactor);
@@ -1585,11 +1585,10 @@ void Tracking::CreateNewKeyFrame()
     mpLocalMapper->InsertKeyFrame(pKF);
 
     mpLocalMapper->SetNotStop(false);
-
-    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,this->mImSegDatas);
-    cout<<"=====debug=====: insert kf to point cloud"<<endl;
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+    mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,this->mImSegDatas);
+    cout<<"=====debug=====: insert kf to point cloud"<<endl;
 }
 
 void Tracking::SearchLocalPoints()

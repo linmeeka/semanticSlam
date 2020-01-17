@@ -364,7 +364,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     // Frame ID
     mnId=nNextId++;
     
-    mImMask=imMask;
+    mImMask=imMask.clone();
     mImMaskColor=imMaskColor;
     mImSegData=segDatas;
 
@@ -384,17 +384,17 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     ExtractORBKeyPoints(0,imGray);
 
     // Delete those ORB points that fall in Mask borders (Included by Berta)
-    cv::Mat Mask_dil = imMask.clone();
+    cv::Mat Mask_dil = mImMask.clone();
     int dilation_size = 15;
-    // cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
-    //                                     cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-    //                                     cv::Point( dilation_size, dilation_size ) );
-    //cv::erode(imMask, Mask_dil, kernel);
-    //mImMask=Mask_dil;
+     cv::Mat kernel = getStructuringElement(cv::MORPH_ELLIPSE,
+                                         cv::Size( 2*dilation_size + 1, 2*dilation_size+1 ),
+                                         cv::Point( dilation_size, dilation_size ) );
+    cv::erode(mImMask, Mask_dil, kernel);
+    mImMask=Mask_dil;
     if(mvKeysTemp.empty())
         return;
 
-    bool enableMovingCheck=false;
+    bool enableMovingCheck=true;
 
     // 运动物体检测
     if(enableMovingCheck)

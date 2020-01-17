@@ -238,11 +238,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
 int Optimizer::PoseOptimization(Frame *pFrame)
 {
-    #ifdef COMPILEDWITHC11
-        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-    #else
-        std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
-    #endif
+    
     g2o::SparseOptimizer optimizer;
     g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
 
@@ -365,11 +361,6 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     }
     }
 
-    #ifdef COMPILEDWITHC11
-        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-    #else
-        std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
-    #endif
     if(nInitialCorrespondences<3)
         return 0;
 
@@ -382,12 +373,24 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     int nBad=0;
     for(size_t it=0; it<4; it++)
     {
-
+    //if(it==0)
+    std::cout<<it<<" :optimizer edge size: "<<optimizer.edges().size()<<" vertices size: "<<optimizer.vertices().size()<<std::endl;
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
+    #endif
         vSE3->setEstimate(Converter::toSE3Quat(pFrame->mTcw));
         optimizer.initializeOptimization(0);
         optimizer.optimize(its[it]);
-
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+    #endif
         nBad=0;
+        //if(it==0)
+        //std::cout<<"vpEdgesMono.size(): "<<vpEdgesMono.size()<<std::endl;
         for(size_t i=0, iend=vpEdgesMono.size(); i<iend; i++)
         {
             g2o::EdgeSE3ProjectXYZOnlyPose* e = vpEdgesMono[i];
@@ -416,7 +419,13 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             if(it==2)
                 e->setRobustKernel(0);
         }
-
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
+    #endif
+    //if(it==0)
+     //   std::cout<<"vpEdgesStereo.size(): "<<vpEdgesStereo.size()<<std::endl;
         for(size_t i=0, iend=vpEdgesStereo.size(); i<iend; i++)
         {
             g2o::EdgeStereoSE3ProjectXYZOnlyPose* e = vpEdgesStereo[i];
@@ -445,7 +454,16 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             if(it==2)
                 e->setRobustKernel(0);
         }
+    #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+    #else
+        std::chrono::monotonic_clock::time_point t4 = std::chrono::monotonic_clock::now();
+    #endif
 
+    double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+    double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
+    double ttrack3= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
+    //cout<<"optimize 1: "<<ttrack1<<" optimize 2: "<<ttrack2<<" optimize 3: "<<ttrack3<<endl;
         if(optimizer.edges().size()<10)
             break;
     }    
@@ -455,14 +473,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     cv::Mat pose = Converter::toCvMat(SE3quat_recov);
     pFrame->SetPose(pose);
-    #ifdef COMPILEDWITHC11
-        std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
-    #else
-        std::chrono::monotonic_clock::time_point t3 = std::chrono::monotonic_clock::now();
-    #endif
-    double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
-    double ttrack2= std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count();
-    //cout<<"optimize 1: "<<ttrack1<<" optimize 2: "<<ttrack2<<endl;
+    
     return nInitialCorrespondences-nBad;
 }
 

@@ -44,7 +44,8 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
             mGrid[i][j] = F.mGrid[i][j];
     }
 
-    SetPose(F.mTcw);    
+    SetPose(F.mTcw);
+    std::cout<<"creat new key frame, frame id: "<<F.mnId<<" kf id: "<<mnId<<std::endl;    
 }
 
 void KeyFrame::ComputeBoW()
