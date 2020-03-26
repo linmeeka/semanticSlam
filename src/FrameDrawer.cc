@@ -35,12 +35,14 @@ FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
 }
 
+string dirMask="/home/kylin/git/dynaslam/DynaSLAM/images";
 cv::Mat FrameDrawer::DrawFrame()
 {
     cv::Mat im;
     vector<cv::KeyPoint> vIniKeys; // Initialization: KeyPoints in reference frame
     vector<int> vMatches; // Initialization: correspondeces with reference keypoints
     vector<cv::KeyPoint> vCurrentKeys; // KeyPoints in current frame
+    vector<cv::KeyPoint> vErasedKeys; // KeyPoints erased in current frame
     vector<bool> vbVO, vbMap; // Tracked MapPoints in current frame
     int state; // Tracking state
 
@@ -53,22 +55,25 @@ cv::Mat FrameDrawer::DrawFrame()
         
 
         mIm.copyTo(im);
-
+        //cv::imwrite(dirMask+"/maskColor/"+to_string(id)+".png",mask);
         if(mState==Tracking::NOT_INITIALIZED)
         {
             vCurrentKeys = mvCurrentKeys;
+            vErasedKeys=mvErasedKeys;
             vIniKeys = mvIniKeys;
             vMatches = mvIniMatches;
         }
         else if(mState==Tracking::OK)
         {
             vCurrentKeys = mvCurrentKeys;
+            vErasedKeys=mvErasedKeys;
             vbVO = mvbVO;
             vbMap = mvbMap;
         }
         else if(mState==Tracking::LOST)
         {
             vCurrentKeys = mvCurrentKeys;
+            vErasedKeys=mvErasedKeys;
         }
     } // destroy scoped mutex -> release mutex
 
@@ -80,58 +85,185 @@ cv::Mat FrameDrawer::DrawFrame()
     }
 
     //Draw
-    if(state==Tracking::NOT_INITIALIZED) //INITIALIZING
-    {
-        for(unsigned int i=0; i<vMatches.size(); i++)
-        {
-            if(vMatches[i]>=0)
-            {
-                cv::line(im,vIniKeys[i].pt,vCurrentKeys[vMatches[i]].pt,
-                        cv::Scalar(0,255,0));
-            }
-        }        
-    }
-    else if(state==Tracking::OK) //TRACKING
-    {
-        mnTracked=0;
-        mnTrackedVO=0;
-        const float r = 5;
-        const int n = vCurrentKeys.size();
-        for(int i=0;i<n;i++)
-        {
-            if(vbVO[i] || vbMap[i])
-            {
-                cv::Point2f pt1,pt2;
-                pt1.x=vCurrentKeys[i].pt.x-r;
-                pt1.y=vCurrentKeys[i].pt.y-r;
-                pt2.x=vCurrentKeys[i].pt.x+r;
-                pt2.y=vCurrentKeys[i].pt.y+r;
+    // if(state==Tracking::NOT_INITIALIZED) //INITIALIZING
+    // {
+    //     for(unsigned int i=0; i<vMatches.size(); i++)
+    //     {
+    //         if(vMatches[i]>=0)
+    //         {
+    //             cv::line(im,vIniKeys[i].pt,vCurrentKeys[vMatches[i]].pt,
+    //                     cv::Scalar(0,255,0));
+    //         }
+    //     }        
+    // }
+    // else if(state==Tracking::OK) //TRACKING
+    // {
+    //     mnTracked=0;
+    //     mnTrackedVO=0;
+    //     const float r = 5;
+    //     int n = vCurrentKeys.size();
+    //     for(int i=0;i<n;i++)
+    //     {
+    //         if(vbVO[i] || vbMap[i])
+    //         {
+    //             cv::Point2f pt1,pt2;
+    //             pt1.x=vCurrentKeys[i].pt.x-r;
+    //             pt1.y=vCurrentKeys[i].pt.y-r;
+    //             pt2.x=vCurrentKeys[i].pt.x+r;
+    //             pt2.y=vCurrentKeys[i].pt.y+r;
 
-                // This is a match to a MapPoint in the map
-                if(vbMap[i])
-                {
-                    cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
-                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
-                    mnTracked++;
-                }
-                else // This is match to a "visual odometry" MapPoint created in the last frame
-                {
-                    cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,0));
-                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,0),-1);
-                    mnTrackedVO++;
-                }
+    //             // This is a match to a MapPoint in the map
+    //             if(vbMap[i])
+    //             {
+    //                 cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
+    //                 cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
+    //                 mnTracked++;
+    //             }
+    //             else // This is match to a "visual odometry" MapPoint created in the last frame
+    //             {
+    //                 cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,0));
+    //                 cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,0),-1);
+    //                 mnTrackedVO++;
+    //             }
+    //         }
+    //     }
+    //     n = vErasedKeys.size();
+    //     for(int i=0;i<n;i++)
+    //     {
+    //         if(vbVO[i] || vbMap[i])
+    //         {
+    //             cv::Point2f pt1,pt2;
+    //             pt1.x=vErasedKeys[i].pt.x-r;
+    //             pt1.y=vErasedKeys[i].pt.y-r;
+    //             pt2.x=vErasedKeys[i].pt.x+r;
+    //             pt2.y=vErasedKeys[i].pt.y+r;
+
+    //             // This is a match to a MapPoint in the map
+    //             if(vbMap[i])
+    //             {
+    //                 cv::rectangle(im,pt1,pt2,cv::Scalar(0,0,255));
+    //                 cv::circle(im,vErasedKeys[i].pt,2,cv::Scalar(0,0,255),-1);
+    //                 mnTracked++;
+    //             }
+    //             // else // This is match to a "visual odometry" MapPoint created in the last frame
+    //             // {
+    //             //     cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,0));
+    //             //     cv::circle(im,vErasedKeys[i].pt,2,cv::Scalar(255,0,0),-1);
+    //             //     mnTrackedVO++;
+    //             // }
+    //         }
+    //     }
+    // }
+    
+    //cv::imwrite(dirMask+"/erase/"+to_string(id)+".png",im);
+    //cv::Mat imWithInfo;
+    //DrawTextInfo(im,state, imWithInfo);
+    //cv::Mat imWithAR;
+    //DrawAR(im,imWithAR);
+    //std::cout<<"before channels: "<<im.channels()<<std::endl;
+    //std::cout<<"after channels: "<<imWithInfo.channels()<<std::endl;
+    return im;
+}
+
+
+void FrameDrawer::DrawAR(cv::Mat &im, cv::Mat &imAR,int &mx,int &my)
+{
+    if(mx==0&&my==0)
+        return;
+
+    double size=1.5;
+    double sizet=2.3;
+    imAR=im.clone();
+    for(auto segData:segDatas)
+    {
+        auto roi=segData->mImROI;
+        int x1=roi.x;
+        int x2=roi.x+roi.width;
+        int y1=roi.y;
+        int y2=roi.y+roi.height;
+        if(mx<x2&&mx>x1&&my>y1&&my<y2)
+        {
+            points.push_back(cv::Point(mx,my));
+            //cv::circle(im,cv::Point(mx,my),5,cv::Scalar(0,255,0),-1);
+        }
+    }
+    //s<<"objs: ";
+    for(auto segData:segDatas)
+    {
+        stringstream s;
+        int id=segData->classId;
+        int x=segData->mImROI.x;
+        int y=segData->mImROI.y;
+        //x=max(1,x-10);
+        //y=max(1,y-10);
+        y=y+10;
+        if (id==63)
+            s<<"This is a TV ";
+        else if(id==57)
+            s<<"This is a chair ";
+        else
+            continue;
+
+        auto roi=segData->mImROI;
+        int x1=roi.x;
+        int x2=roi.x+roi.width;
+        int y1=roi.y;
+        int y2=roi.y+roi.height;
+        for(auto point:points)
+        {
+            int tx=point.x;
+            int ty=point.y;
+            if(tx<x2&&tx>x1&&ty>y1&&ty<y2)
+            {
+                int baseline=0;
+                cv::Size textSize = cv::getTextSize(s.str(),cv::FONT_HERSHEY_PLAIN,1,1,&baseline); 
+                cv::putText(imAR,s.str(),cv::Point(x,y),cv::FONT_HERSHEY_PLAIN,size,cv::Scalar(125,125,255),sizet,8);
+                cv::circle(imAR,cv::Point(tx,ty),5,cv::Scalar(0,255,0),-1);
+                break;
+            }
+        }
+
+        
+    }
+    int classId=1;
+
+    cv::threshold(maskar,maskar,classId,255,CV_THRESH_TOZERO_INV);
+    cv::threshold(maskar,maskar,classId-1,255,CV_THRESH_TOZERO);
+    //im.copyTo(imAR,maskar);
+
+    for(auto segData:segDatas)
+    {
+        stringstream s;
+        int id=segData->classId;
+        int x=segData->mImROI.x;
+        int y=segData->mImROI.y;
+        //x=max(1,x-10);
+        //y=max(1,y-10);
+        y=y+10;
+        if(id==1)
+            s<<"This is a man ";
+        else
+            continue;
+        auto roi=segData->mImROI;
+        int x1=roi.x;
+        int x2=roi.x+roi.width;
+        int y1=roi.y;
+        int y2=roi.y+roi.height;
+        for(auto point:points)
+        {
+            int tx=point.x;
+            int ty=point.y;
+            if(tx<x2&&tx>x1&&ty>y1&&ty<y2)
+            {
+                int baseline=0;
+                cv::Size textSize = cv::getTextSize(s.str(),cv::FONT_HERSHEY_PLAIN,1,1,&baseline); 
+                cv::putText(imAR,s.str(),cv::Point(x,y),cv::FONT_HERSHEY_PLAIN,size,cv::Scalar(255,125,125),sizet,8);
+                                cv::circle(imAR,cv::Point(tx,ty),2,cv::Scalar(0,255,0),-1);
+                break;
             }
         }
     }
-
-    cv::Mat imWithInfo;
-    DrawTextInfo(im,state, imWithInfo);
-
-    //std::cout<<"before channels: "<<im.channels()<<std::endl;
-    //std::cout<<"after channels: "<<imWithInfo.channels()<<std::endl;
-    return imWithInfo;
 }
-
 
 void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 {
@@ -175,8 +307,16 @@ void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     // 绘制灰度图
-    pTracker->mImGray.copyTo(mIm);
+    pTracker->mImMaskColor.copyTo(mask);
+    pTracker->mImRGB.copyTo(mIm);
+    pTracker->mImMask.copyTo(maskar);
+    id=pTracker->mCurrentFrame.mnId;
+    segDatas=pTracker->mCurrentFrame.mImSegData;
+    //cv::imwrite(dirMask+"/ori/"+to_string(id)+".png",pTracker->mImRGB);
+    //cv::imwrite(dirMask+"/depth/"+to_string(id)+".png",pTracker->mImDepth);
+    //pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
+    mvErasedKeys=pTracker->mCurrentFrame.erasedmKeysT;
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);

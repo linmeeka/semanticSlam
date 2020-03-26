@@ -2,7 +2,7 @@
 * This file is a modified version of ORB-SLAM2.<https://github.com/raulmur/ORB_SLAM2>
 *
 * This file is part of DynaSLAM.
-* Copyright (C) 2018 Berta Bescos <bbescos at uniz dot es> (University of Zaragoza)
+* Copyright (C) 2018 Berta Bescos <bbescos at unizar dot es> (University of Zaragoza)
 * For more information see <https://github.com/bertabescos/DynaSLAM>.
 *
 */
@@ -14,10 +14,6 @@
 
 namespace ORB_SLAM2
 {
-
-int mx;
-int my;
-void On_mouse(int event, int x, int y, int flags, void*);
 
 Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Tracking *pTracking, const string &strSettingPath):
     mpSystem(pSystem), mpFrameDrawer(pFrameDrawer),mpMapDrawer(pMapDrawer), mpTracker(pTracking),
@@ -76,8 +72,6 @@ void Viewer::Run()
     pangolin::View& d_cam = pangolin::CreateDisplay()
             .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
             .SetHandler(new pangolin::Handler3D(s_cam));
-    // kylin 
-    //pangolin::GlTexture imageTexture(1024,768,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
 
     pangolin::OpenGlMatrix Twc;
     Twc.SetIdentity();
@@ -120,11 +114,7 @@ void Viewer::Run()
         }
 
         d_cam.Activate(s_cam);
-        //glClearColor(1.0f,1.0f,1.0f,1.0f);
-        // kylin
-        //glColor3f(1.0,1.0,1.0);
-        //mpMapDrawer->DrawImageTexture(imageTexture);
-        //glClear(GL_DEPTH_BUFFER_BIT);
+        glClearColor(1.0f,1.0f,1.0f,1.0f);
         mpMapDrawer->DrawCurrentCamera(Twc);
         if(menuShowKeyFrames || menuShowGraph)
             mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph);
@@ -134,11 +124,7 @@ void Viewer::Run()
         pangolin::FinishFrame();
 
         cv::Mat im = mpFrameDrawer->DrawFrame();
-        namedWindow("DynaSLAM: Current Frame", cv::WINDOW_NORMAL);
-        cv::setMouseCallback("DynaSLAM: Current Frame", On_mouse);
-        cv::Mat imAR=im.clone();
-        mpFrameDrawer->DrawAR(im,imAR,mx,my);
-        cv::imshow("DynaSLAM: Current Frame",imAR);
+        cv::imshow("DynaSLAM: Current Frame",im);
         //cv::imwrite("test1.png",im);
         
         cv::waitKey(mT);
@@ -171,20 +157,6 @@ void Viewer::Run()
     }
 
     SetFinish();
-}
-
-void On_mouse(int event, int x, int y, int flags, void*)//每次点击左键，将将当前点坐标存储到txt文件中，并在相应位置画红点
-{
-    
-    if (event == cv::EVENT_LBUTTONDOWN) 
-    {
-        mx=x;
-        my=y;
-        //circle(src, recent_Point, 3, Scalar(0, 0, 255), -1);    
-        //imshow(WINDOW, src);
-        cout<<"mouse x "<<x<<"y "<<y<<endl;
-
-    }
 }
 
 void Viewer::RequestFinish()

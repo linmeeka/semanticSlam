@@ -260,7 +260,9 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
     // Set MapPoint vertices
     const int N = pFrame->N;
-    //cout<<"=====debug===== : frame key poitns: "<< N<<endl;
+    cout<<"=====debug===== : frame key poitns: "<< N<<endl;
+    const int N1 = pFrame->mvKeysUn.size();
+    cout<<"=====debug===== : frame key1 poitns: "<< N1<<endl;
     vector<g2o::EdgeSE3ProjectXYZOnlyPose*> vpEdgesMono;
     vector<size_t> vnIndexEdgeMono;
     vpEdgesMono.reserve(N);
@@ -374,7 +376,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     for(size_t it=0; it<4; it++)
     {
     //if(it==0)
-    std::cout<<it<<" :optimizer edge size: "<<optimizer.edges().size()<<" vertices size: "<<optimizer.vertices().size()<<std::endl;
+    //std::cout<<it<<" :optimizer edge size: "<<optimizer.edges().size()<<" vertices size: "<<optimizer.vertices().size()<<std::endl;
     #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     #else

@@ -24,10 +24,9 @@
 #include "Tracking.h"
 #include "MapPoint.h"
 #include "Map.h"
-#include "SegData.h"
+
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
-
 
 #include<mutex>
 
@@ -48,32 +47,25 @@ public:
 
     // Draw last processed frame.
     cv::Mat DrawFrame();
-void DrawAR(cv::Mat &im, cv::Mat &imText,int &mx,int &my);
+
 protected:
 
     void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);
-    
+
     // Info of the frame to be drawn
     cv::Mat mIm;
-    cv::Mat mask;
-    cv::Mat maskar;
     int N;
     vector<cv::KeyPoint> mvCurrentKeys;
-    vector<cv::KeyPoint> mvErasedKeys;
     vector<bool> mvbMap, mvbVO;
     bool mbOnlyTracking;
     int mnTracked, mnTrackedVO;
     vector<cv::KeyPoint> mvIniKeys;
     vector<int> mvIniMatches;
-    std::vector<std::shared_ptr<SegData>> segDatas;
-
     int mState;
-    int id;
 
     Map* mpMap;
 
     std::mutex mMutex;
-    vector<cv::Point> points;
 };
 
 } //namespace ORB_SLAM

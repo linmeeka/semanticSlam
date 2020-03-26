@@ -56,6 +56,7 @@ void LoopClosing::SetLocalMapper(LocalMapping *pLocalMapper)
 
 void LoopClosing::Run()
 {
+    //return;
     mbFinished =false;
 
     while(1)

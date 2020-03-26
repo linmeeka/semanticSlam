@@ -367,6 +367,9 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD,const cv
     return mCurrentFrame.mTcw.clone();
 }
 
+int frames=0;
+double frametime=0;
+
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const cv::Mat &mask, const cv::Mat &maskColor,
                                 std::vector<std::shared_ptr<SegData>> &segDatas, const double &timestamp, 
                                 cv::Mat &imRGBOut, cv::Mat &imDOut, cv::Mat &maskOut)
@@ -414,6 +417,9 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
     #else
             std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
     #endif
+    frames++;
+    frametime+=std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+    cout<<frames<<" "<< frametime<<" "<<frametime/frames<<endl;
     Track();
     #ifdef COMPILEDWITHC11
             std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
@@ -1588,7 +1594,7 @@ void Tracking::CreateNewKeyFrame()
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
     mpPointCloudMapping->insertKeyFrame( pKF, this->mImMaskColor, this->mImDepth, this->mImMask,this->mImSegDatas);
-    cout<<"=====debug=====: insert kf to point cloud"<<endl;
+    //cout<<"=====debug=====: insert kf to point cloud"<<endl;
 }
 
 void Tracking::SearchLocalPoints()

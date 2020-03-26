@@ -174,7 +174,8 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
     cout<<"generate point cloud for kf "<<kf->mnId<<", size="<<cloud->points.size()<<endl;
     return cloud;
 }
-
+    int sumKF=0;
+    double sumTime=0;
 void PointCloudMapping::viewer()
 {
     //return ;
@@ -210,6 +211,11 @@ void PointCloudMapping::viewer()
             for(int i=0;i<N;i++)
             //for (size_t i=lastKeyframeSize; i<N ; i++) 
             {
+                                #ifdef COMPILEDWITHC11
+                std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+                #else
+                std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
+                #endif
                 // 为每个KF生成点云
                 //PointCloud::Ptr surf_p = generatePointCloud(keyframes[i], img_tmp_color, depthImgs[i]);
                 KeyFrame* kf=keyframes.front();
@@ -222,7 +228,8 @@ void PointCloudMapping::viewer()
                 maskImgs.pop();
                 std::vector<std::shared_ptr<SegData>> segDatas=segDataQue.front();
                 segDataQue.pop();
-                //cout<<"=====debug=====: get kf from queue"<<endl;
+                int kfid=kf->mnId;
+                cout<<"=====debug=====: get kf from queue: "<<kfid<<endl;
                 // 更新背景
                 PointCloud::Ptr surf_p = generatePointCloud(kf, colorImg, depthImg,maskImg);
                 *background += *surf_p;
@@ -234,16 +241,27 @@ void PointCloudMapping::viewer()
                 cout<<" segData size: "<<segDatas.size()<<endl;
                 modelManager.UpdateObjectPointCloud(kf, colorImg, depthImg,maskImg,globalMap);
                 //cout<<"=====debug=====: update moving object"<<endl;
-                //PointCloud::Ptr p = RegionGrowingSeg(surf_p);                
-
-            }
-        }
-
+                //PointCloud::Ptr p = RegionGrowingSeg(surf_p); 
+                #ifdef COMPILEDWITHC11
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+         #else
+        std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
+        #endif
+        sumKF++;
+        double ttrack1= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+        sumTime+=ttrack1;
         voxel.setInputCloud( globalMap );
         viewer.showCloud( globalMap );
         cout << "show global map, size=" << globalMap->points.size() << endl;
-        lastKeyframeSize = N;
+        cout << "ttrack1 " << ttrack1 << endl;
+        lastKeyframeSize = N;               
+
+            }
+        }
+        
     }
+    std::cout<<"map per kf: "<<sumTime/sumKF<<std::endl;
+    std::cout<<"total num of kf: "<<sumKF<<std::endl;
     // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     // pcl::PCDWriter pcdwriter;
     // pcdwriter.write<pcl::PointXYZRGBA>("global_color.pcd", *globalMap);//write global point cloud map and save to a pcd file

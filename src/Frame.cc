@@ -399,7 +399,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imMas
     // 运动物体检测
     if(enableMovingCheck)
     {
-        cout<<"=====debug=====: enableMovingCheck"<<endl;
+        //cout<<"=====debug=====: enableMovingCheck"<<endl;
         cv::Mat imGrayTemp=imGray.clone();
         flagMoveSemantic=MovingCheckBySemantic();
         if(flagMoveSemantic&&mImGrayPre.data)
