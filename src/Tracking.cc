@@ -378,6 +378,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const c
     mImDepth=imD;
     mImMaskColor=maskColor;
     mImMask=mask;
+    mImRGB=imRGB;
     mImSegDatas=segDatas;
     cv::Mat imMask = mask;
     cv::Mat _imRGB = imRGB.clone();

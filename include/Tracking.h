@@ -95,6 +95,8 @@ public:
     cv::Mat mImDepth;
     cv::Mat mImMaskColor;
     cv::Mat mImMask;
+    cv::Mat mImRGB;
+    
     std::vector<std::shared_ptr<SegData>> mImSegDatas;
 
     // Initialization Variables (Monocular)

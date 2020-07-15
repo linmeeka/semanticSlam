@@ -376,9 +376,24 @@ std::vector<double> SegmentDynObject::GetScoreesult(){
     return result;
 }
 
-void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::vector<double> &ScoreRes, std::string dir, std::string name){
-    std::string nameMask=dir+"/mask/"+name+".png";
-    maskRes = cv::imread(nameMask,CV_LOAD_IMAGE_UNCHANGED);
+ void SegmentDynObject::GetSegmentation(cv::Mat &image, cv::Mat &maskRes, std::vector<cv::Rect> &ROIRes, std::vector<int> &ClassIdRes, std::vector<double> &ScoreRes, std::string dir, std::string name){
+    // std::string nameMaskCRF=dir+"/maskcrf/"+name+".png";
+    // maskRes = cv::imread(nameMaskCRF,CV_LOAD_IMAGE_UNCHANGED);
+    // if(!maskRes.data)
+    // {
+        std::string nameMask=dir+"/mask/"+name+".png";
+        maskRes = cv::imread(nameMask,CV_LOAD_IMAGE_UNCHANGED);
+    //     std::string nameImg=dir+"/rgb/"+name+".png";
+    //     cv::imwrite(nameImg,image);
+    // }
+    // else
+    // {
+    //     std::cout<<"read crf img "<<name<<std::endl;
+    // }
+    // if(!maskRes.data)
+    // {
+    //     std::cout<<"fail to read img "<<name<<std::endl;
+    // }
     //maskRes = cv::imread(dir+"/"+name,CV_LOAD_IMAGE_UNCHANGED);
     if(maskRes.empty()){
         PyObject* py_image = cvt->toNDArray(image.clone());

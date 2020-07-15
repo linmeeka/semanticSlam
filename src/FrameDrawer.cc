@@ -311,12 +311,12 @@ void FrameDrawer::Update(Tracking *pTracker)
     pTracker->mImRGB.copyTo(mIm);
     pTracker->mImMask.copyTo(maskar);
     id=pTracker->mCurrentFrame.mnId;
-    segDatas=pTracker->mCurrentFrame.mImSegData;
+    //segDatas=pTracker->mCurrentFrame.mImSegData;
     //cv::imwrite(dirMask+"/ori/"+to_string(id)+".png",pTracker->mImRGB);
     //cv::imwrite(dirMask+"/depth/"+to_string(id)+".png",pTracker->mImDepth);
     //pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
-    mvErasedKeys=pTracker->mCurrentFrame.erasedmKeysT;
+    //mvErasedKeys=pTracker->mCurrentFrame.erasedmKeysT;
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);

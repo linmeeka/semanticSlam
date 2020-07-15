@@ -178,7 +178,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
     double sumTime=0;
 void PointCloudMapping::viewer()
 {
-    //return ;
+    return ;
     std::cout<<"enter viewer "<<std::endl;
     sleep(3);
     pcl::visualization::CloudViewer viewer("viewer");
